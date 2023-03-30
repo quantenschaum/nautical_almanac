@@ -56,7 +56,7 @@ There is a `makefile` for this job.
 
 ## Validation
 
-I own a copy of the Paracay Nautical Almanac 2021 and some preview pages other year are available online. The `daily-pages-yyyy-mm-dd.txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP).
+I own a copy of the Paracay Nautical Almanac 2021 and some preview pages of other years are available online. The `daily-pages-yyyy-mm-dd.txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP).
 
 Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the sun which is up to 0.2' systematically off (unclear why). GHA of Aries and SHA and Dec of the stars match exactly, moon and planets match exactly for the majority of the values.
 
