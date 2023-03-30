@@ -1,6 +1,6 @@
-{%- set nhours = nhours or 24 %}
+{%- set nhours = nhours or 72 %}
 {%- set make_stars = make_stars if make_stars is defined else 1 %}
-{%- set events = events if events is defined else 1 %}
+{%- set events = events if events is defined else 0 %}
 {{- marker("°"," ") }}{{- marker("'","") -}}
 Alamnac generated {{today}} using {{ephemeris}} ephemeris.
 {%- if iers_time %}
@@ -34,7 +34,7 @@ UT |        Sun        |               Moon                |   Aries  |{%- for p
 {%- for p in planets %}       {{MP(t1,p)|hm}}       |{%- endfor %}
 
 {% if make_stars -%}
-{%- set cols=cols or 4 -%}
+{%- set cols=cols or 1 -%}
 {% for i in range(cols) %}Star          |    SHA      Dec   | {% endfor %}
 {% for i in range(cols) %}              |   °   '    °   '  | {% endfor %}
 {% for s in stars|sort -%}{%- set sha,dec=sha_dec(t2,s) %}{{s|format("{:<13}")}} | {{sha|dm}} {{dec|dm}} | {{"" if loop.index%cols else "\n"}}{% endfor %}

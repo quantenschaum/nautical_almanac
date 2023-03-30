@@ -53,7 +53,7 @@ def load_cache(filename="cache.pkl"):
             _caches[k].update(c)
 
 
-def dump_caches(filename="cache.pkl"):
+def dump_cache(filename="cache.pkl"):
     with open(filename, "wb") as f:
         pickle.dump(_caches, f)
 
@@ -146,7 +146,7 @@ def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
         except:
             pass
 
-        atexit.register(dump_caches)
+        atexit.register(dump_cache)
 
 
 def body(name):
