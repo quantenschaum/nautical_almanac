@@ -32,7 +32,7 @@ This software currently is a single Python script `almanac.py`. It contains rout
 
 The compilation of data tables containing the values is done using the [Jinja](https://jinja.palletsprojects.com/) template engine. This allows the data to be formatted in any format you like. By using templates computation and presentation of the data get completely separated, and it is much easier to maintain and change the output format.
 
-The output values of the SkyField based routines, which take quite some time to evaluate, are cached. The cache may be store to disk and can be used in future runs to speed up the template rendering.
+The output values of the SkyField based routines, which take quite some time to evaluate, are cached. The cache may be stored to disk and can be used in future runs to speed up the template rendering.
 
 The script also exposes a command line interface using `argparse` which allows to render a Jinja template and set various parameters. Just run `./almanac.py -h` to what it can do.
 
@@ -47,7 +47,7 @@ Currently, there are 2 templates in the package.
 - Arc to Time conversion table
 - Altitude correction tables (values from commercial almanac or by [formula](https://en.wikipedia.org/wiki/Atmospheric_refraction#Calculating_refraction))
 - Index to selected stars
-- Daily paged with GHA, Dec, ...
+- Daily pages with GHA, Dec, ...
 - Increments and Corrections
 
 There is a `makefile` for this job.
@@ -56,12 +56,10 @@ There is a `makefile` for this job.
 
 ## Validation
 
-I own a copy of the Paracay Nautical Almanac 2021 and some preview pages of other years are available online. The `daily-pages-yyyy-mm-dd.txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP). The [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf) is also freely available online and can be used for comparison.
+I have a copy of the Paracay Nautical Almanac 2021 and some pages of other years are available [online](https://en.wikipedia.org/wiki/Nautical_almanac). The `daily-pages-yyyy-....txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP). The [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf) is also freely available online and can be used for comparison.
 
-Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the sun which is up to 0.2' systematically off (unclear why). GHA of Aries and SHA and Dec of the stars match exactly, moon and planets match exactly for the majority of the values.
+Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the sun which is up to 0.2' systematically off (in 23, 21 but not 02). GHA of Aries matches exactly, stars, moon and planets match exactly for the majority of the values.
 
-GHA of sun and Aries matches the values given in the AirAlmanac exactly, which is interesting, because they are off compared to NA. So, GHA of sun is different in AA and NA by up to 0.2'. Why?
-
-Moon Dec is off by >1' compared to the AA, but it only tabulated with integer minutes.
+GHA of sun and Aries matches the values given in the AirAlmanac exactly. So, GHA of sun is different in AA and NA by up to 0.2'. Why? Moon Dec is off by >1' compared to the AA, but it is only tabulated with integer minutes.
 
 The values also agree with those computed by SkyAlmanac (the routines are effectively the same). The SkyAlmanac is also off on the sun's values.
