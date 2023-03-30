@@ -496,8 +496,8 @@ def ms(H, signed=False, rep={}):
     return replace(f"{pad}{m:02.0f}:{s:02.0f}", rep)
 
 
-def angle(s):
-    dms = s.split()
+def angle(s, sep=None):
+    dms = s.split(sep)
     assert 0 < len(dms) < 4
     dms = [float(v) for v in dms]
     a = sum([abs(v) / pow(60, i) for i, v in enumerate(dms)])
@@ -505,7 +505,7 @@ def angle(s):
 
 
 def parse(s):
-    for t in int, float, angle:
+    for t in int, float, angle, partial(angle, sep=":"):
         try:
             return t(s)
         except:

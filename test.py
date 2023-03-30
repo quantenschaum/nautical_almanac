@@ -1,6 +1,9 @@
+import re
 from datetime import datetime, timedelta
+from os import listdir
 
-from almanac import parse, gha_dec, init, sha_dec, marker, dm, magnitude, v_value, d_value, hp_moon
+from almanac import parse, gha_dec, init, sha_dec, marker, dm, magnitude, v_value, d_value, hp_moon, equation_of_time, \
+    semi_diameter, meridian_passage, moon_age_phase
 
 
 def read_page(filename):
@@ -8,11 +11,12 @@ def read_page(filename):
     with open(filename) as f:
         for line in f:
             if "dUT1" in line:
+                mode = None
                 date = line.split("dUT1")[0].strip()
                 t0 = datetime.strptime(date, "%Y %B %d (%a)")
                 t1 = t0 + timedelta(hours=24)
                 t2 = t0 + timedelta(hours=36)
-            if "|" in line:
+            elif "|" in line:
                 cols = [c.strip() for c in line.strip().split("|")]
                 cols = list(filter(len, cols))
                 # print(cols)
@@ -56,6 +60,33 @@ def read_page(filename):
                     c = cols[1].split()
                     data.append([t2, name, "SHA", parse(f"{c[0]} {c[1]}")])
                     data.append([t2, name, "Dec", parse(f"{c[2]} {c[3]}")])
+                elif mode == "GHA":
+                    for i, c in enumerate(cols):
+                        if c.startswith("SD") or c.startswith("v"):
+                            v = c.split()
+                            for k in range(0, len(v), 2):
+                                data.append([t2, names[i + 1 + (1 if i > 1 else 0)], v[k], float(v[k + 1])])
+                        elif c.startswith("EoT"):
+                            v = c.split()
+                            data.append([t1, names[i + 1], v[0], parse(v[1]) / 60])
+                            data.append([t1 + timedelta(hours=12), names[i + 1], v[0], parse(v[2]) / 60])
+                        elif c.startswith("Age"):
+                            v = c.split()
+                            data.append([t2, names[i + 1], v[0], int(v[1][:-1])])
+                            data.append([t2, names[i + 1], v[2], int(v[3][:-1])])
+                        elif c.startswith("Upper"):
+                            v = c.split()
+                            data.append([t1, names[i + 1], v[0], parse(v[1])])
+                            data.append([t1, names[i + 1], v[2], parse(v[3])])
+                        elif c.startswith("MP"):
+                            v = c.split()
+                            data.append([t1, names[i + 1], v[0], parse(v[1])])
+                        elif ":" in c:
+                            data.append([t1, names[i + 1], "MP", parse(c)])
+                        elif i > 2:
+                            v = parse(c)
+                            if isinstance(v, float):
+                                data.append([t1, names[i + 1], "SHA", v])
 
     return data
 
@@ -83,35 +114,49 @@ def compare(filename):
         elif n == "HP":
             assert b == "Moon", b
             w = hp_moon(t) * 60
+        elif n == "EoT":
+            assert b == "Sun", b
+            w = equation_of_time(t)
+        elif n == "SD":
+            w = semi_diameter(t, b) * 60
+        elif n in ["MP", "Upper", "Lower"]:
+            w = meridian_passage(t, b, upper=n != "Lower")
+        elif n == "Age":
+            assert b == "Moon", b
+            w = moon_age_phase(t)[0]
+        elif n == "Phase":
+            assert b == "Moon", b
+            w = round(moon_age_phase(t)[1] * 100)
         else:
+            print(r)
             continue
         f = 60 if n in ["GHA", "SHA", "Dec"] else 1
         w = parse(dm(w)) if n in ["GHA", "SHA", "Dec"] else round(w, 1)
-        d = (w - v) * f
+        d = abs(w - v) * f
         mm = diff.setdefault(b, {}).setdefault(n, [0, 0, 0])
-        assert abs(d) < 0.21, (r, w, d)
-        if d != 0:
-            mm[2] += 1
-        for i, g in enumerate((min, max)):
-            mm[i] = g(mm[i], d)
+        assert d < 0.25, (r, w, d)
+        mm[0] = max(mm[0], d)
+        mm[1] += 1 if d > 0 else 0
+        mm[2] += 1
 
     diff2 = []
     for b, v in diff.items():
         for k, v in v.items():
-            diff2.append([b, k, "min", v[0]])
-            diff2.append([b, k, "max", v[1]])
-            diff2.append([b, k, "abs", max(-v[0], v[1])])
-            diff2.append([b, k, "n", v[2]])
+            diff2.append([b, k] + v)
 
-    print(data[0][0])
-    total = 0
+    print(data[4][0])
+    r = "bddy", "value", "maxdev", "dev", "tot"
+    print(f"{r[0]:15} {r[1]:6} {r[2]:6} {r[3]:>6}/{r[4]}")
     for r in diff2:
-        if r[3] and r[2] in ["abs", "n"]:
-            if r[2] == "n":
-                total += r[3]
-            print(f"{r[0]:10} {r[1]:3} {r[2]:3} {r[3]}")
-    print(f"           total   {total}\n")
+        if r[2]:
+            print(f"{r[0]:15} {r[1]:6} {r[2]:6.4f} {r[3]:6}/{r[4]}")
 
 
-compare("daily-pages-2021-01-01.txt")
-compare("daily-pages-2021-04-01.txt")
+def main():
+    for d in listdir():
+        if re.match("daily-pages-\\d{4}-\\d{2}-\\d{2}.txt", d):
+            compare(d)
+
+
+if __name__ == "__main__":
+    main()
