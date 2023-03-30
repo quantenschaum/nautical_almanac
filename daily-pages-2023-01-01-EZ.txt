@@ -1,8 +1,8 @@
-Data from ezAlamanc 2023
+Data from ezAlamanac 2023
 
 2023 January 01 (Sun)  dUT1=UT1-UTC=-0.0199s  dTT=TT-UT1=+69.2039s
 
-UT |        Sun        |               Moon                |   Aries  |    Venus -3.9     |     Mars -1.2     |   Jupiter -2.3    |    Saturn +0.9    |
+UT |        Sun        |               Moon                |   Aries  |    Venus          |     Mars          |   Jupiter         |    Saturn         |
    |    GHA      Dec   |    GHA     v     Dec      d   HP  |    GHA   |    GHA      Dec   |    GHA      Dec   |    GHA      Dec   |    GHA      Dec   |
  h |   °   '    °   '  |   °   '    '    °   '     '    '  |   °   '  |   °   '    °   '  |   °   '    °   '  |   °   '    °   '  |   °   '    °   '  |
  0 | 179 12.0 -23  2.4 |  68 43.6 13.8  12  3.2  13.4 56.3 | 100 23.3 | 160 39.0 -22  2.2 |  33 29.7  24 35.3 |  98 46.9  -0 42.4 | 135 11.7 -15 12.9 |

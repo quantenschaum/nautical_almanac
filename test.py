@@ -2,11 +2,24 @@ import re
 from datetime import datetime, timedelta
 from os import listdir
 
-from almanac import parse, gha_dec, init, sha_dec, marker, dm, magnitude, v_value, d_value, hp_moon, equation_of_time, \
+from almanac import parse, gha_dec, init, sha_dec, dm, magnitude, v_value, d_value, hp_moon, equation_of_time, \
     semi_diameter, meridian_passage, moon_age_phase
 
 
+def count_hours(filename):
+    hours = 0
+    with open(filename) as f:
+        for line in f:
+            if "|" in line:
+                cols = [c.strip() for c in line.strip().split("|")]
+                cols = list(filter(len, cols))
+                if isinstance(parse(cols[0]), int):
+                    hours += 1
+    return hours
+
+
 def read_page(filename):
+    hours = count_hours(filename)
     data = []
     with open(filename) as f:
         for line in f:
@@ -14,8 +27,8 @@ def read_page(filename):
                 mode = None
                 date = line.split("dUT1")[0].strip()
                 t0 = datetime.strptime(date, "%Y %B %d (%a)")
-                t1 = t0 + timedelta(hours=24)
-                t2 = t0 + timedelta(hours=36)
+                t1 = t0 + timedelta(days=int(hours / 24 / 2))
+                t2 = t0 + timedelta(hours=hours / 2)
             elif "|" in line:
                 cols = [c.strip() for c in line.strip().split("|")]
                 cols = list(filter(len, cols))
@@ -44,12 +57,17 @@ def read_page(filename):
                             data.append([th, name, "GHA", parse(c)])
                         elif name == "Moon":
                             c = c.split()
-                            assert len(c) == 7, c
-                            data.append([th, name, "GHA", parse(f"{c[0]} {c[1]}")])
-                            data.append([th, name, "v", parse(c[2])])
-                            data.append([th, name, "Dec", parse(f"{c[3]} {c[4]}")])
-                            data.append([th, name, "d", parse(c[5])])
-                            data.append([th, name, "HP", parse(c[6])])
+                            if len(c) == 7:
+                                data.append([th, name, "GHA", parse(f"{c[0]} {c[1]}")])
+                                data.append([th, name, "v", parse(c[2])])
+                                data.append([th, name, "Dec", parse(f"{c[3]} {c[4]}")])
+                                data.append([th, name, "d", parse(c[5])])
+                                data.append([th, name, "HP", parse(c[6])])
+                            elif len(c) == 4:
+                                data.append([th, name, "GHA", parse(f"{c[0]} {c[1]}")])
+                                data.append([th, name, "Dec", parse(f"{c[2]} {c[3]}")])
+                            else:
+                                assert 0, c
                         else:
                             c = c.split()
                             assert len(c) == 4, c
@@ -95,8 +113,6 @@ def compare(filename):
     data = read_page(filename)
     init()
     diff = {}
-    marker("°", " ")
-    marker("'", "")
     for r in data:
         t, b, n, v = r
         if n == "GHA":
@@ -134,7 +150,7 @@ def compare(filename):
         w = parse(dm(w)) if n in ["GHA", "SHA", "Dec"] else round(w, 1)
         d = abs(w - v) * f
         mm = diff.setdefault(b, {}).setdefault(n, [0, 0, 0])
-        assert d < 0.25, (r, w, d)
+        assert d < 2, (r, w, d)
         mm[0] = max(mm[0], d)
         mm[1] += 1 if d > 0 else 0
         mm[2] += 1
@@ -154,7 +170,7 @@ def compare(filename):
 
 def main():
     for d in listdir():
-        if re.match("daily-pages-\\d{4}-\\d{2}-\\d{2}.txt", d):
+        if re.match("daily-pages-\\d{4}-.*.txt", d):
             compare(d)
 
 

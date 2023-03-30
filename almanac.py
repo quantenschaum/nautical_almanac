@@ -186,6 +186,7 @@ def delta_t(t):
 def sha_dec(t, b):
     "SHA and DEC of body b at time t in degrees"
     ra, dec, _ = earth.at(time(t)).observe(bodies[b]).apparent().radec("date")
+    # if b == "Sun": return - (ra._degrees + 0.15 / 60) % 360, dec.degrees # fixed GHA offset to NA
     return -ra._degrees % 360, dec.degrees
     ghaa, _ = gha_dec(t, "Aries")
     gha, dec = gha_dec(t, b)
@@ -496,8 +497,10 @@ def ms(H, signed=False, rep={}):
     return replace(f"{pad}{m:02.0f}:{s:02.0f}", rep)
 
 
-def angle(s, sep=None):
-    dms = s.split(sep)
+def angle(s):
+    for c in "°':":
+        s = s.replace(c, " ")
+    dms = s.split()
     assert 0 < len(dms) < 4
     dms = [float(v) for v in dms]
     a = sum([abs(v) / pow(60, i) for i, v in enumerate(dms)])
@@ -505,7 +508,7 @@ def angle(s, sep=None):
 
 
 def parse(s):
-    for t in int, float, angle, partial(angle, sep=":"):
+    for t in int, float, angle:
         try:
             return t(s)
         except:
