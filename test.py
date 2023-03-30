@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from os import listdir
 
 from almanac import parse, gha_dec, init, sha_dec, dm, magnitude, v_value, d_value, hp_moon, equation_of_time, \
-    semi_diameter, meridian_passage, moon_age_phase
+    semi_diameter, meridian_passage, moon_age_phase, ms, hm
 
 
 def count_hours(filename):
@@ -142,13 +142,23 @@ def compare(filename):
             w = moon_age_phase(t)[0]
         elif n == "Phase":
             assert b == "Moon", b
-            w = round(moon_age_phase(t)[1] * 100)
+            w = moon_age_phase(t)[1] * 100
         else:
             print(r)
             continue
-        f = 60 if n in ["GHA", "SHA", "Dec"] else 1
-        w = parse(dm(w)) if n in ["GHA", "SHA", "Dec"] else round(w, 1)
-        d = abs(w - v) * f
+        if n in ["GHA", "SHA", "Dec"]:
+            w = parse(dm(w))
+        elif n in ["EoT"]:
+            w = parse(ms(w)) / 60
+        elif n in ["MP", "Upper", "Lower"]:
+            w = parse(hm(w))
+        elif n in ["Age", "Phase"]:
+            w = round(w)
+        else:
+            w = round(w, 1)
+        d = abs(w - v)
+        if n in ["GHA", "SHA", "Dec", "MP", "Upper", "Lower"]:
+            d *= 60
         mm = diff.setdefault(b, {}).setdefault(n, [0, 0, 0])
         assert d < 2, (r, w, d)
         mm[0] = max(mm[0], d)
@@ -160,8 +170,8 @@ def compare(filename):
         for k, v in v.items():
             diff2.append([b, k] + v)
 
-    print(data[4][0])
-    r = "bddy", "value", "maxdev", "dev", "tot"
+    print(filename)
+    r = "body", "value", "maxdev", "dev", "tot"
     print(f"{r[0]:15} {r[1]:6} {r[2]:6} {r[3]:>6}/{r[4]}")
     for r in diff2:
         if r[2]:
