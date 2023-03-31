@@ -200,8 +200,7 @@ def sha_dec(t, b):
     if _gha == 0:
         if b == ARIES:
             return 0.0, 0.0
-        t = time(t)
-        ra, dec, _ = earth.at(t).observe(bodies[b]).apparent().radec("date")
+        ra, dec, _ = earth.at(time(t)).observe(bodies[b]).apparent().radec("date")
         return -ra._degrees % 360, dec.degrees
     gha, dec = gha_dec(t, b)
     sha = (gha - gha_dec(t, ARIES)[0]) % 360
@@ -219,8 +218,7 @@ def gha_dec(t, b):
 
     # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
     # which results in ITRS GHA, Dec but do not match the values from the almanac
-    t = time(t)
-    lat, lon, _ = earth.at(t).observe(bodies[b]).apparent().frame_latlon(itrs)
+    lat, lon, _ = earth.at(time(t)).observe(bodies[b]).apparent().frame_latlon(itrs)
     dec, gha = lat.degrees, -lon.degrees % 360
     return gha, dec
 
