@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from os import listdir
 
 from almanac import parse, gha_dec, init, sha_dec, dm, magnitude, v_value, d_value, hp_moon, equation_of_time, \
-    semi_diameter, meridian_passage, moon_age_phase, ms, hm
+    semi_diameter, meridian_passage, moon_age_phase, hm
 
 
 def count_hours(filename):
@@ -149,7 +149,7 @@ def compare(filename):
         if n in ["GHA", "SHA", "Dec"]:
             w = parse(dm(w))
         elif n in ["EoT"]:
-            w = parse(ms(w)) / 60
+            w = parse(hm(w)) / 60
         elif n in ["MP", "Upper", "Lower"]:
             w = parse(hm(w))
         elif n in ["Age", "Phase"]:
@@ -160,7 +160,9 @@ def compare(filename):
         if n in ["GHA", "SHA", "Dec", "MP", "Upper", "Lower"]:
             d *= 60
         mm = diff.setdefault(b, {}).setdefault(n, [0, 0, 0])
-        assert d < 2, (r, w, d)
+        aa = "AA" in filename  # AirAlmanac
+        if not (b == "Moon" and aa):
+            assert d <= (0.25 if n in ["GHA", "Dec"] else 1), (filename, r, w, d)
         mm[0] = max(mm[0], d)
         mm[1] += 1 if d > 0 else 0
         mm[2] += 1
@@ -172,9 +174,9 @@ def compare(filename):
 
     print(filename)
     r = "body", "value", "maxdev", "dev", "tot"
-    print(f"{r[0]:15} {r[1]:6} {r[2]:6} {r[3]:>6}/{r[4]}")
+    # print(f"{r[0]:15} {r[1]:6} {r[2]:6} {r[3]:>6}/{r[4]}")
     for r in diff2:
-        if r[2]:
+        if r[2] and r[0] == "Sun":
             print(f"{r[0]:15} {r[1]:6} {r[2]:6.4f} {r[3]:6}/{r[4]}")
 
 

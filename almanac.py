@@ -208,13 +208,16 @@ def sha_dec(t, b):
 
 
 @cached(_caches["gha"])
-def gha_dec(t, b):
+def gha_dec(t, b, sun_vcorr=1):
     "GHA and Dec of body b at time t in degrees"
     if _gha == 0 or _gha == 2 and b == ARIES:
         if b == ARIES:
             return 15 * time(t).gast, 0.0  # ICRS right ascension (0) + gast
         sha, dec = sha_dec(t, b)
-        return (sha + gha_dec(t, ARIES)[0]) % 360, dec
+        gha = (sha + gha_dec(t, ARIES)[0]) % 360
+        if sun_vcorr and b == "Sun":
+            return gha + v_value(t, b) / 60 / 2, dec  # add v value as explained in the NA
+        return gha, dec
 
     # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
     # which results in ITRS GHA, Dec but do not match the values from the almanac
@@ -297,8 +300,8 @@ def d_value(t, b):
 
 def v_value(t, b):
     "v values of body b (excess rate of change of GHA) in arc minutes/hour"
-    gha0, dec0 = gha_dec(t, b)
-    gha1, dec1 = gha_dec(t + duration(hours=1), b)
+    gha0, dec0 = gha_dec(t, b, 0)
+    gha1, dec1 = gha_dec(t + duration(hours=1), b, 0)
     base = (14 + 19 / 60) if b == "Moon" else 15
     # gha0, gha1 = round(gha0 * 60, 1) / 60, round(gha1 * 60, 1) / 60
     return ((gha1 - gha0) % 360 - base) * 60
@@ -485,17 +488,19 @@ def f(v, s=None):
         if s is None:
             w = f(v, 1)
         elif isinstance(s, int):
-            w = f(v, "00." + "0" * s) if s else f(v, "00")
+            w = f(v, " 0." + "0" * s) if s else f(v, " 0")
         elif isinstance(s, str):
             if "{" in s:
                 w = s.format(v)
             else:
-                s = s if "0" in s else s + "00.0"
+                s = s if "0" in s else s + " 0.0"
                 m = len(s)
                 n = s.split(".")[1].count("0") if "." in s else 0
-                p = "+" if "+" in s else "-"
+                p = "+" if "+" in s else " " if "-" in s else "-"
+                p += "0" if s.split(".")[0].count("0") > 1 else ""
                 u = s[s.rfind("0") + 1:]
                 m -= len(u)
+                ff = f"{{:{p}{m}.{n}f}}{u}"
                 w = f(round(v, n), f"{{:{p}{m}.{n}f}}{u}")
     elif s is None:
         w = str(v)
@@ -513,7 +518,7 @@ def dm(a, n=None):
     return replace(f"{d:3.0f}°{m:{k}.{n}f}'")
 
 
-def hms(H, s=False):
+def hms(H, p=""):
     "format as HH:MM:SS"
     if H is None:
         return "--:--:--"
@@ -526,11 +531,13 @@ def hms(H, s=False):
     if m >= 60:
         m -= 60
         h += 1
-    pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{h:02.0f}:{m:02.0f}:{s:02.0f}")
+    p = p.replace("-", " ")
+    n = 3 if p or H < 0 else 2
+    h = copysign(h, H)
+    return replace(f"{h:{p}0{n}.0f}:{m:02.0f}:{s:02.0f}")
 
 
-def hm(H, s=False):
+def hm(H, s=""):
     "format hours as HH:MM"
     if H is None:
         return "--:--"
@@ -539,21 +546,10 @@ def hm(H, s=False):
     if m >= 60:
         m -= 60
         h += 1
-    pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{h:02.0f}:{m:02.0f}")
-
-
-def ms(H, s=False):
-    "format minutes as MM:SS"
-    if H is None:
-        return "--:--"
-    m = int(abs(H))
-    s = round(60 * (abs(H) % 1))
-    if s >= 60:
-        s -= 60
-        m += 1
-    pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{m:02.0f}:{s:02.0f}")
+    s = s.replace("-", " ")
+    n = 3 if s or H < 0 else 2
+    h = copysign(h, H)
+    return replace(f"{h:{s}0{n}.0f}:{m:02.0f}")
 
 
 def angle(s):
@@ -903,7 +899,7 @@ def render(template, variables={}, generate=False, progress=None):
         "dm": dm,
         "hms": hms,
         "hm": hm,
-        "ms": ms,
+        "ms": hm,
         "rep": replace,
     })
     env.globals.update(variables)

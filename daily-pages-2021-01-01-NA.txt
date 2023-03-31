@@ -1,4 +1,4 @@
-Data from Paracay Nautical Almanac 2021
+Paracay Nautical Almanac 2021
 
 2021 January 01 (Fri)  dUT1=UT1-UTC=-0.1746s  dTT=TT-UT1=+69.3586s
 
