@@ -385,7 +385,7 @@ def twilight(t, lat, lon=0):
 def moon_rise_set(t, lat, lon=0):
     "time of moon rise and set"
     s = "Moon"
-    sd = semi_diameter(t, s)
+    sd = semi_diameter(t, s) / 60
     f = almanac.risings_and_settings(eph, bodies[s], wgs84.latlon(lat, lon), radius_degrees=sd)
     f.step_days = 0.01
     t0, t1 = time(t), time(t + duration(hours=24))
@@ -513,7 +513,7 @@ def dm(a, n=None):
     return replace(f"{d:3.0f}°{m:{k}.{n}f}'")
 
 
-def hms(H, s=False, rep={}):
+def hms(H, s=False):
     "format as HH:MM:SS"
     if H is None:
         return "--:--:--"
@@ -527,10 +527,10 @@ def hms(H, s=False, rep={}):
         m -= 60
         h += 1
     pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{h:02.0f}:{m:02.0f}:{s:02.0f}", rep)
+    return replace(f"{pad}{h:02.0f}:{m:02.0f}:{s:02.0f}")
 
 
-def hm(H, s=False, rep={}):
+def hm(H, s=False):
     "format hours as HH:MM"
     if H is None:
         return "--:--"
@@ -540,10 +540,10 @@ def hm(H, s=False, rep={}):
         m -= 60
         h += 1
     pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{h:02.0f}:{m:02.0f}", rep)
+    return replace(f"{pad}{h:02.0f}:{m:02.0f}")
 
 
-def ms(H, s=False, rep={}):
+def ms(H, s=False):
     "format minutes as MM:SS"
     if H is None:
         return "--:--"
@@ -553,7 +553,7 @@ def ms(H, s=False, rep={}):
         s -= 60
         m += 1
     pad = "-" if H < 0 else " " if s else ""
-    return replace(f"{pad}{m:02.0f}:{s:02.0f}", rep)
+    return replace(f"{pad}{m:02.0f}:{s:02.0f}")
 
 
 def angle(s):
