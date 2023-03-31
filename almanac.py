@@ -191,10 +191,10 @@ def delta_t(t):
     return float(time(t).delta_t)
 
 
-_gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 w/o M, 3=like 1, only Aries w/o M
+_gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 with GHAA of 0
 
 
-# @cached(_caches["sha"])
+@cached(_caches["sha"])
 def sha_dec(t, b):
     "SHA and Dec of body b at time t in degrees"
     if _gha == 0:
@@ -208,7 +208,7 @@ def sha_dec(t, b):
     return sha, dec
 
 
-# @cached(_caches["gha"])
+@cached(_caches["gha"])
 def gha_dec(t, b):
     "GHA and Dec of body b at time t in degrees"
     if _gha == 0 or _gha == 2 and b == ARIES:

@@ -4,7 +4,7 @@ pdf: Nautical-Almanac-$(Y).pdf
 txt: daily-pages-$(Y).txt
 
 Nautical-Almanac-$(Y).pdf: nautical-almanac.tex.j2 almanac.py
-	./almanac.py $< -o $(@:.pdf=.tex) -f -c -y$(Y) -d1
+	./almanac.py $< -o $(@:.pdf=.tex) -f -c -y$(Y)
 	latexmk -pdf $(@:.pdf=.tex) -interaction=batchmode
 
 daily-pages-$(Y).txt: daily-pages.txt.j2 almanac.py
