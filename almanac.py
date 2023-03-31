@@ -16,7 +16,6 @@ from skyfield.api import Star, load, wgs84
 from skyfield.data import hipparcos, iers
 from skyfield.earthlib import refraction
 from skyfield.framelib import itrs
-from skyfield.functions import rot_z
 from skyfield.magnitudelib import planetary_magnitude
 from skyfield.timelib import Time
 
@@ -92,6 +91,9 @@ def iers_info(kind, mode):
     return _iers_info[kind][mode] if _iers_info else None
 
 
+ARIES = "Aries"
+
+
 def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
     "initialize SkyField and Almanac global state"
     global ts, eph, bodies, earth, star_df, _iers_info
@@ -136,7 +138,7 @@ def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
         "Jupiter": eph["jupiter barycenter"],
         "Saturn": eph["saturn barycenter"],
         "Mercury": eph["mercury barycenter"],
-        "Aries": Star(ra_hours=0, dec_degrees=0),
+        ARIES: Star(ra_hours=0, dec_degrees=0),
         "Polaris": Star.from_dataframe(star_df.loc[11767]),
     })
 
@@ -189,39 +191,60 @@ def delta_t(t):
     return float(time(t).delta_t)
 
 
-@cached(_caches["sha"])
+_gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 w/o M, 3=like 1, only Aries w/o M
+
+
+# @cached(_caches["sha"])
 def sha_dec(t, b):
     "SHA and Dec of body b at time t in degrees"
-    ra, dec, _ = earth.at(time(t)).observe(bodies[b]).apparent().radec("date")
-    # if b == "Sun": return - (ra._degrees + 0.15 / 60) % 360, dec.degrees # fixes GHA offset to NA
-    return -ra._degrees % 360, dec.degrees
-
-    ghaa, _ = gha_dec(t, "Aries")
+    if _gha == 0:
+        if b == ARIES:
+            return 0.0, 0.0
+        t = time(t)
+        ra, dec, _ = earth.at(t).observe(bodies[b]).apparent().radec("date")
+        return -ra._degrees % 360, dec.degrees
     gha, dec = gha_dec(t, b)
-    sha = (gha - ghaa) % 360
+    sha = (gha - gha_dec(t, ARIES)[0]) % 360
     return sha, dec
 
 
-@cached(_caches["gha"])
+# @cached(_caches["gha"])
 def gha_dec(t, b):
     "GHA and Dec of body b at time t in degrees"
-    if b.startswith("Aries"):
-        # GHA of Aries is a time dependent offset solely used to calculate GHA of star = GHA of Aries + SHA of star
-        # in the Nautical Almanac it is NOT the ITRS equinox of date but RA=0 in ICRS
-        return 15 * time(t).gast, 0  # ICRS right ascension (0) + gast, effectively the same as code below
-        t = time(t)
-        t.M = rot_z(0)  # use ICRS equinox, not equinox of date (no precession/nutation)
-        lat, lon, _ = earth.at(t).observe(bodies[b]).frame_latlon(itrs)
-        dec, gha = lat.degrees, -lon.degrees % 360
-        return gha, dec
-    sha, dec = sha_dec(t, b)
-    return (gha_dec(t, "Aries")[0] + sha) % 360, dec
+    if _gha == 0 or _gha == 2 and b == ARIES:
+        if b == ARIES:
+            return 15 * time(t).gast, 0.0  # ICRS right ascension (0) + gast
+        sha, dec = sha_dec(t, b)
+        return (sha + gha_dec(t, ARIES)[0]) % 360, dec
 
     # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
     # which results in ITRS GHA, Dec but do not match the values from the almanac
-    lat, lon, _ = earth.at(time(t)).observe(bodies[b]).apparent().frame_latlon(itrs)
+    t = time(t)
+    lat, lon, _ = earth.at(t).observe(bodies[b]).apparent().frame_latlon(itrs)
     dec, gha = lat.degrees, -lon.degrees % 360
     return gha, dec
+
+
+def is_number(v):
+    return isinstance(v, int) or isinstance(v, float)
+
+
+def gha_comparison():
+    global _gha
+    init()
+    t = datetime(2023, 1, 1, 13)
+    print(t, "UT1")
+    print("Object      M   GHA          Dec          SHA          Dec")
+    for b in ARIES, "Sun", "Vega":
+        for i in range(3):
+            _gha = i
+            a = [b, i]
+            a += gha_dec(t, b)
+            a += sha_dec(t, b)
+            s = ""
+            for k, v in enumerate(a):
+                s += f"{v:12.8f} " if isinstance(v, float) else f"{v:6} "
+            print(s)
 
 
 def lha_dec(t, b, lon):
@@ -460,8 +483,7 @@ def deg_min(a, n=None):
 
 
 def f(v, s=None):
-    is_number = isinstance(v, int) or isinstance(v, float)
-    if is_number:
+    if is_number(v):
         if s is None:
             w = f(v, 1)
         elif isinstance(s, int):
@@ -482,7 +504,7 @@ def f(v, s=None):
     else:
         w = s.format(v) if "{" in s else f"{{:{s}}}".format(v)
 
-    return replace(w) if is_number else w
+    return replace(w) if is_number(v) else w
 
 
 def dm(a, n=None):
@@ -1019,7 +1041,7 @@ if 0:
     if b in stars:
         sha, dec = sha_dec(t, b)
         print("SHA", dm(sha), "Dec", dm(dec))
-        ghaa, _ = gha_dec(t, "Aries")
+        ghaa, _ = gha_dec(t, ARIES)
         print("GHAA", dm(sha))
     gha, dec = gha_dec(t, b)
     print("GHA", dm(gha), "Dec", dm(dec))

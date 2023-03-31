@@ -63,3 +63,27 @@ Currently, the computed values of GHA/SHA and Dec agree with those published in 
 GHA of sun and Aries matches the values given in the AirAlmanac exactly. So, GHA of sun is different in AA and NA by up to 0.2'. Why? Moon Dec is off by >1' compared to the AA, but it is only tabulated with integer minutes.
 
 The values also agree with those computed by SkyAlmanac (the routines are effectively the same). The SkyAlmanac is also off on the sun's values.
+
+## GHA and Dec
+
+There are several ways to calculate GHA, SHA and Dec, because there are different coordinate systems.
+
+0. GHA = SHA + GHAA with GHAA = GAST*15 (Greenwich Apparent Siderial Time, GHA of Aries) and SHA = -RA (ICRS right ascension) `radec('date')`
+1. GHA = ITRS Longitude and SHA = GHA-GHAA with GHAA = ITRS Longitude of Aries `frame_latlon(itrs)` (includes polar motion)
+2. Same as 1, but with GHAA as in 0
+
+GHA and Dec are almost identical for all 3 methods, but GHAA and thus SHA are different for 1. The differences between 0 and 2 are due to polar motion (if enabled with `iers.install_polar_motion_table()`), which currently does not affect the values in the output tables, because the differences are <0.1'. The Nautical Almanac uses a GHAA as in 0.
+
+```
+2023-01-01 13:00:00 UT1
+Object      M   GHA          Dec          SHA          Dec
+Aries       0 295.92252658   0.00000000   0.00000000   0.00000000 
+Aries       1 295.63149837   0.12650040   0.00000000   0.12650040 
+Aries       2 295.92252658   0.00000000   0.00000000   0.00000000 
+Sun         0  14.13837499 -22.99598847  78.21584841 -22.99598847 
+Sun         1  14.13835372 -22.99601850  78.50685535 -22.99601850 
+Sun         2  14.13835372 -22.99601850  78.21582713 -22.99601850 
+Vega        0  16.50241883  38.80390619  80.57989225  38.80390619 
+Vega        1  16.50245810  38.80387411  80.87095973  38.80387411 
+Vega        2  16.50245810  38.80387411  80.57993151  38.80387411 
+```
