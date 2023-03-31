@@ -43,7 +43,7 @@ Currently, there are 2 templates in the package.
 `nautical-almanac.tex.j2` produces LaTeX source code that can further be compiled into a PDF. This is essentially the same output as [SkyAlmanac](https://github.com/aendie/SkyAlmanac-Py3) produces and should contain all necessary information as in the official almanacs. It contains
 
 - Chart of the sky (taken from [SkyAlmanac](https://github.com/aendie/SkyAlmanac-Py3))
-- Plots of equation of time and meridian passages of the sun and the planets
+- Plots of equation of time and meridian passages of the Sun and the planets
 - Arc to Time conversion table
 - Altitude correction tables (values from commercial almanac or by [formula](https://en.wikipedia.org/wiki/Atmospheric_refraction#Calculating_refraction))
 - Index to selected stars
@@ -56,13 +56,23 @@ There is a `makefile` for this job.
 
 ## Validation
 
-I have a copy of the Paracay Nautical Almanac 2021 and some pages of other years are available [online](https://en.wikipedia.org/wiki/Nautical_almanac). The `daily-pages-yyyy-....txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP). The [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf) is also freely available online and can be used for comparison.
+I have a copy of the Paracay Nautical Almanac 2021 and some pages of other years are available online ([Wikipedia](https://en.wikipedia.org/wiki/Nautical_almanac), [here](https://maritimesafetyinnovationlab.org/wp-content/uploads/2015/01/nautical-almanac-1981.pdf), [here](https://www.dco.uscg.mil/Portals/9/NMC/pdfs/examinations/10_1981_nautical_almanac.pdf), [here](http://fer3.com/arc/imgx/Nautical-Almanac-1981-(ReedNavigation.com-edit).pdf)). The `daily-pages-yyyy-....txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP). The [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf) is also freely available online and can be used for comparison.
 
-Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the sun which is up to 0.2' systematically off (in 23, 21 but not 02). GHA of Aries matches exactly, stars, moon and planets match exactly for the majority of the values.
+Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the Sun which is up to 0.2' systematically off (in 23, 21 but not 02). GHA of Aries matches exactly, stars, Moon and planets match exactly for the majority of the values.
 
-GHA of sun and Aries matches the values given in the AirAlmanac exactly. So, GHA of sun is different in AA and NA by up to 0.2'. Why? Moon Dec is off by >1' compared to the AA, but it is only tabulated with integer minutes.
+GHA of Sun and Aries matches the values given in the AirAlmanac exactly. So, GHA of Sun is different in AA and NA by up to 0.2'. Why? Moon Dec is off by >1' compared to the AA, but it is only tabulated with integer minutes.
 
-The values also agree with those computed by SkyAlmanac (the routines are effectively the same). The SkyAlmanac is also off on the sun's values.
+The values also agree with those computed by SkyAlmanac (the routines are effectively the same). The SkyAlmanac is also off on the Sun's values.
+
+### GHA of Sun
+
+In the explainations if the NA, in section "[Main Data](exp1.png)" and "[Accuracy](exp2.png)" mention the following
+
+> v for the Sun is negligible and is omitted
+
+> The quantities tabulated in this Almanac are generally correct to the nearest 0.1'; the exception is the Sun's GHA which is deliberately adjusted by up to 0.15' to reduce the error due to ignoring the v-correction.
+
+This explains the systematic difference of the GHA of the Sun. This adjustment is not present in the AirAlmanac.
 
 ## GHA and Dec
 
