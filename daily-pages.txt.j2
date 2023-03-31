@@ -14,21 +14,21 @@ IERS polar motion data until {{iers("P","I")}}, predictions until {{iers("P","P"
 {%- set t = datetime(year,1,1)+days(d) %}
 {%- set t1 = t+days((nhours/24/2)|int) %}
 {%- set t2 = t+hours(nhours/2) %}
-{{-t|format("{:%Y %B %d (%a)}")}}  dUT1=UT1-UTC={{dut1(t2)|format("{:+.4f}")}}s  dTT=TT-UT1={{dtt(t2)|format("{:+.4f}")}}s
+{{-t|f("{:%Y %B %d (%a)}")}}  dUT1=UT1-UTC={{dut1(t2)|f("+0.0000s")}}  dTT=TT-UT1={{dtt(t2)|f("+0.0000s")}}
 
-UT |        Sun        |               Moon                |   Aries  |{%- for p in planets %}{{(p+" "+mag(t2,p)|format("{:+.1f}"))|format("{:^19}")}}|{% endfor %}
+UT |        Sun        |               Moon                |   Aries  |{%- for p in planets %}{{(p+" "+mag(t2,p)|f("+0.0"))|f("{:^19}")}}|{% endfor %}
    |    GHA      Dec   |    GHA     v     Dec      d   HP  |    GHA   |{%- for p in planets %}    GHA      Dec   |{% endfor %}
  h |   °   '    °   '  |   °   '    '    °   '     '    '  |   °   '  |{%- for p in planets %}   °   '    °   '  |{% endfor %}
 {% for h in range(nhours) -%}
-{%- set th = t+duration(hours=h) %}{{th.hour|format("{:2}")}} |
+{%- set th = t+duration(hours=h) %}{{th.hour|f("00")}} |
 {%- set gha,dec=gha_dec(th,"Sun") %} {{gha|dm}} {{dec|dm}} |
-{%- set gha,dec=gha_dec(th,"Moon") %} {{gha|dm}} {{v_value(th,"Moon")|mi}} {{dec|dm}} {{d_value(th,"Moon")|mis}} {{hp_moon(th)|mi}} |
+{%- set gha,dec=gha_dec(th,"Moon") %} {{gha|dm}} {{v_value(th,"Moon")|f}} {{dec|dm}} {{d_value(th,"Moon")|f("-")}} {{hp_moon(th)|f}} |
 {%- set gha,dec=gha_dec(th,"Aries") %} {{gha|dm}} |
 {%- for p in planets -%}{%- set gha,dec=gha_dec(th,p) %} {{gha|dm}} {{dec|dm}} |{%- endfor %}
 {% endfor -%}
-{{""}}   |  SD {{SD(t2,"Sun")|mi}}  d {{d_value(t2,"Sun")|mis}} |                SD {{SD(t2,"Moon")|mi}}            |          |
-{%- for p in planets %}  v {{v_value(t2,p)|mis}}  d {{d_value(t2,p)|mis}} |{%- endfor %}
-   | EoT {{eqot(t1)|ms(1)}} {{eqot(t1+hours(12))|ms(1)}} |      Age {{age(t2)|format("{:2.0f}d")}}   Phase {{(phase(t2)*100)|format("{:3.0f}%")}}         |      SHA |
+{{""}}   |  SD {{SD(t2,"Sun")|f}}  d {{d_value(t2,"Sun")|f("-")}} |                SD {{SD(t2,"Moon")|f}}            |          |
+{%- for p in planets %}  v {{v_value(t2,p)|f("-")}}  d {{d_value(t2,p)|f("-")}} |{%- endfor %}
+   | EoT {{eqot(t1)|ms(1)}} {{eqot(t1+hours(12))|ms(1)}} |      Age {{age(t2)|f("00d")}}   Phase {{(phase(t2)*100)|f("000%")}}         |      SHA |
 {%- for p in planets %} {{sha_dec(t1,p)[0]|dm}}          |{%- endfor %}
    | MP    {{MP(t1,"Sun")|hm}}       |    Upper {{MP(t1,"Moon")|hm}}    Lower {{MP(t1,"Moon",upper=0)|hm}}     |  {{MP(t1,"Aries")|hm}}   |
 {%- for p in planets %}       {{MP(t1,p)|hm}}       |{%- endfor %}
@@ -37,7 +37,7 @@ UT |        Sun        |               Moon                |   Aries  |{%- for p
 {%- set cols=cols or 1 -%}
 {% for i in range(cols) %}Star          |    SHA      Dec   | {% endfor %}
 {% for i in range(cols) %}              |   °   '    °   '  | {% endfor %}
-{% for s in stars|sort -%}{%- set sha,dec=sha_dec(t2,s) %}{{s|format("{:<13}")}} | {{sha|dm}} {{dec|dm}} | {{"" if loop.index%cols else "\n"}}{% endfor %}
+{% for s in stars|sort -%}{%- set sha,dec=sha_dec(t2,s) %}{{s|f("{:<13}")}} | {{sha|dm}} {{dec|dm}} | {{"" if loop.index%cols else "\n"}}{% endfor %}
 
 {% endif -%}
 {% if events -%}
@@ -45,7 +45,7 @@ Lat |   Twilight    |      Sun      |   Twilight    |     Moon      |
   ° | naut. | civil | rise  |  set  | civil | naut. | rise  |  set  |
 {% set up=" *** " -%}{%- set dn=" ### " -%}{%- set tl="/////" -%}
 {% for l in latitudes -%}
-{{l|format("{:3}")}}{{" | "}}
+{{l|f("-00")}}{{" | "}}
 {%- set tw=twilight(t1,l) %}
 {{-tw.get(2)|hm if tw.get(2) else tl if tw.get(4) else up if tw["max"]>3 else dn}}{{" | "}}
 {{-tw.get(3)|hm if tw.get(3) else tl if tw.get(4) else up if tw["max"]>3 else dn}}{{" | "}}

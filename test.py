@@ -124,17 +124,17 @@ def compare(filename):
         elif n == "mag":
             w = magnitude(t, b)
         elif n == "v":
-            w = v_value(t, b) * 60
+            w = v_value(t, b)
         elif n == "d":
-            w = d_value(t, b) * 60
+            w = d_value(t, b)
         elif n == "HP":
             assert b == "Moon", b
-            w = hp_moon(t) * 60
+            w = hp_moon(t)
         elif n == "EoT":
             assert b == "Sun", b
             w = equation_of_time(t)
         elif n == "SD":
-            w = semi_diameter(t, b) * 60
+            w = semi_diameter(t, b)
         elif n in ["MP", "Upper", "Lower"]:
             w = meridian_passage(t, b, upper=n != "Lower")
         elif n == "Age":

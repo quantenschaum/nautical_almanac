@@ -5,11 +5,9 @@ from collections import defaultdict
 from datetime import datetime, date
 from datetime import timedelta as duration
 from decimal import Decimal, ROUND_HALF_UP
-from functools import partial
 from math import copysign, floor, cos, nan, sqrt, atan, sin, asin, acos, radians, degrees
 from os.path import isfile
 
-import skyfield
 from cachetools import cached
 from numpy import array, arange
 from progress.bar import Bar
@@ -20,6 +18,7 @@ from skyfield.earthlib import refraction
 from skyfield.framelib import itrs
 from skyfield.functions import rot_z
 from skyfield.magnitudelib import planetary_magnitude
+from skyfield.timelib import Time
 
 try:
     from matplotlib import use
@@ -59,7 +58,7 @@ def dump_cache(filename="cache.pkl"):
 
 
 def iers_dates(finals):
-    "return dates when Polar motion, Time, Nutation measured data (I) and predictions (P) ends"
+    "return dates when Polar motion, Time, Nutation data (I) and predictions (P) ends"
     dates = defaultdict(dict)
     dt0 = None
     flags0 = None
@@ -94,6 +93,7 @@ def iers_info(kind, mode):
 
 
 def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
+    "initialize SkyField and Almanac global state"
     global ts, eph, bodies, earth, star_df, _iers_info
 
     finals = "finals2000A.all"
@@ -150,44 +150,52 @@ def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
 
 
 def body(name):
+    "return ephemeris for named body"
     return bodies[name]
 
 
 def time(t):
-    "python datetime -> skyfield time"
-    if isinstance(t, skyfield.timelib.Time):
+    "python datetime (UT1) -> skyfield time"
+    if isinstance(t, Time):
         return t
     # return ts.from_datetime(t.replace(tzinfo=utc))
-    return ts.ut1(t.year, t.month, t.day, t.hour, t.minute, t.second + t.microsecond * 1e-6)
+    return ts.ut1(t.year, t.month, t.day, t.hour, t.minute, t.second + t.microsecond / 1e6)
 
 
 def dtime(t):
-    "skyfield time object -> python datetime UTC"
-    return t.utc_datetime().replace(tzinfo=None)
+    "skyfield time -> python datetime (UT1, rounded to integer seconds)"
+    # return t.utc_datetime().replace(tzinfo=None)
+    c = list(t.ut1_calendar())
+    c[5] = round(c[5])
+    if c[5] >= 60:
+        c[5] -= 60
+        return datetime(*c) + duration(minutes=1)
+    return datetime(*c)
 
 
 def hours(t):
-    "decimal hours of time"
+    "time -> decimal hours of day (since 00:00)"
     t = dtime(t)
-    return t.hour + (t.minute + t.second / 60) / 60
+    return t.hour + (t.minute + (t.second + t.microsecond / 1e6) / 60) / 60
 
 
 def delta_ut1(t):
-    "difference UT1-UTC (should be <0.9s)"
-    return time(t).dut1
+    "difference UT1-UTC in s (should be <0.9s)"
+    return float(time(t).dut1)
 
 
 def delta_t(t):
-    "difference TT-UT1"
-    return time(t).delta_t
+    "difference TT-UT1 in s"
+    return float(time(t).delta_t)
 
 
 @cached(_caches["sha"])
 def sha_dec(t, b):
-    "SHA and DEC of body b at time t in degrees"
+    "SHA and Dec of body b at time t in degrees"
     ra, dec, _ = earth.at(time(t)).observe(bodies[b]).apparent().radec("date")
-    # if b == "Sun": return - (ra._degrees + 0.15 / 60) % 360, dec.degrees # fixed GHA offset to NA
+    # if b == "Sun": return - (ra._degrees + 0.15 / 60) % 360, dec.degrees # fixes GHA offset to NA
     return -ra._degrees % 360, dec.degrees
+
     ghaa, _ = gha_dec(t, "Aries")
     gha, dec = gha_dec(t, b)
     sha = (gha - ghaa) % 360
@@ -196,7 +204,7 @@ def sha_dec(t, b):
 
 @cached(_caches["gha"])
 def gha_dec(t, b):
-    "GHA and DEC of body b at time t in degrees"
+    "GHA and Dec of body b at time t in degrees"
     if b.startswith("Aries"):
         # GHA of Aries is a time dependent offset solely used to calculate GHA of star = GHA of Aries + SHA of star
         # in the Nautical Almanac it is NOT the ITRS equinox of date but RA=0 in ICRS
@@ -208,64 +216,71 @@ def gha_dec(t, b):
         return gha, dec
     sha, dec = sha_dec(t, b)
     return (gha_dec(t, "Aries")[0] + sha) % 360, dec
+
+    # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
+    # which results in ITRS GHA, Dec but do not match the values from the almanac
     lat, lon, _ = earth.at(time(t)).observe(bodies[b]).apparent().frame_latlon(itrs)
     dec, gha = lat.degrees, -lon.degrees % 360
     return gha, dec
 
 
 def lha_dec(t, b, lon):
+    "LHA and Dec of body b at time t in degrees"
     gha, dec = gha_dec(t, b)
     return (gha + lon) % 360, dec
 
 
 def alt_az(t, b, lat, lon, sky=0):
+    "Altitude and Azimuth of body b at time t at (lat,lon) in degrees"
     t = time(t)
     if sky:
+        # this includes parallax at pos on earth surface and dip and optionally refraction
         l = earth + wgs84.latlon(lat, lon)
         alt, az, dist = l.at(t).observe(bodies[b]).apparent().altaz()
         return alt.degrees, az.degrees
     lha, dec = lha_dec(t, b, lon)
-    sdec = sin(radians(dec))
-    slat = sin(radians(lat))
-    clat = cos(radians(lat))
-    cdec = cos(radians(dec))
-    clha = cos(radians(lha))
-    hc = degrees(asin(sdec * slat + clat * cdec * clha))
-    shc = sin(radians(hc))
-    chc = cos(radians(hc))
-    z = degrees(acos((sdec - slat * shc) / (clat * chc)))
+    lha, dec, lat = radians(lha), radians(dec), radians(lat)
+    clha = cos(lha)
+    sdec, cdec = sin(dec), cos(dec)
+    slat, clat = sin(lat), cos(lat)
+    hc = asin(sdec * slat + clat * cdec * clha)
+    shc, chc = sin(hc), cos(hc)
+    z = acos((sdec - slat * shc) / (clat * chc))
+    hc, z = degrees(hc), degrees(z)
     zn = z if lha > 180 else 360 - z
     return hc, zn
 
 
 @cached(_caches["sd"])
 def semi_diameter(t, b):
-    "semi diameter of body b in degrees"
+    "semi diameter of body b at time t in arc minutes"
     t = time(t)
     _, _, dist = earth.at(t).observe(bodies[b]).apparent().radec(t)
     radius = {"Sun": 695997, "Moon": 1739.9}  # km
-    return degrees(atan(radius[b] / dist.km))
+    return degrees(atan(radius[b] / dist.km)) * 60
 
 
 def hp_moon(t):
+    "moon's horizontal parallax at time t in arc minutes"
     return semi_diameter(t, "Moon") / 0.272805950305
 
 
 def d_value(t, b):
-    "d value of body b, hourly change of DEC in arc minutes"
+    "d value of body b (rate of change of DEC) in arc minutes/hour"
     gha0, dec0 = gha_dec(t, b)
     gha1, dec1 = gha_dec(t + duration(hours=1), b)
-    # dec0, dec1 = round(dec0 * 60, 1) / 60, round(dec1 * 60, 1) / 60
+    dec0, dec1 = dec0 * 60, dec1 * 60
+    # dec0, dec1 = round(dec0, 1) / 60, round(dec1, 1) / 60
     return abs(dec1) - abs(dec0) if dec0 * dec1 > 0 else (dec1 - dec0)
 
 
 def v_value(t, b):
-    "v values of body b, excess of hourly change of GHA in arc minutes"
+    "v values of body b (excess rate of change of GHA) in arc minutes/hour"
     gha0, dec0 = gha_dec(t, b)
     gha1, dec1 = gha_dec(t + duration(hours=1), b)
     base = (14 + 19 / 60) if b == "Moon" else 15
     # gha0, gha1 = round(gha0 * 60, 1) / 60, round(gha1 * 60, 1) / 60
-    return (gha1 - gha0) % 360 - base
+    return ((gha1 - gha0) % 360 - base) * 60
 
 
 @cached(_caches["mag"])
@@ -280,19 +295,19 @@ def magnitude(t, b):
 
 
 def equation_of_time(t):
-    "equation of time (solar time - UT1) at time t in hours"
+    "equation of time (solar time - UT1) at time t in minutes"
     gha, dec = gha_dec(t, "Sun")
     tsun = (gha / 15 - 12) % 24  # solar time
     tut1 = hours(time(t))
     eqot = tsun - tut1
     if abs(eqot) > 1:
         eqot -= copysign(24, eqot)
-    return eqot
+    return eqot * 60
 
 
 @cached(_caches["mp"])
 def meridian_passage(t, b, lon=0, upper=True):
-    "time of meridian passage of body b at date t"
+    "time of meridian passage of body b at date t in hours"
     f = almanac.meridian_transits(eph, bodies[b], wgs84.latlon(0, lon))
     t0, t1 = time(t), time(t + duration(hours=24))
     times, events = almanac.find_discrete(t0, t1, f)
@@ -365,7 +380,7 @@ def moon_rise_set(t, lat, lon=0):
 
 @cached(_caches["ma"])
 def moon_age_phase(t):
-    "moon age (time since new moon) and phase (percent illuminated)"
+    "moon age (time since new moon) in days and phase (fraction illuminated)"
     t0, t1 = time(t - duration(days=30)), time(t + duration(hours=24))
     p = almanac.moon_phase(eph, time(t)).radians
     illum = (1 - cos(p)) / 2
@@ -377,21 +392,25 @@ def moon_age_phase(t):
 
 
 def inc_sun(m, s):
+    "GHA increment of sun"
     h = (m + s / 60) / 60
     return h * 15
 
 
 def inc_aries(m, s):
+    "GHA increment of Aries"
     h = (m + s / 60) / 60
     return h * (15 + 2.46 / 60)
 
 
 def inc_moon(m, s):
+    "GHA increment of moon"
     h = (m + s / 60) / 60
     return h * (14 + 19 / 60)
 
 
 def v_corr(m, s, v):
+    "v/d correction"
     h = (m + s / 60) / 60
     return v * h
 
@@ -410,6 +429,8 @@ def marker(k, m):
 
 
 def replace(s, m={}):
+    for k, v in m.items():
+        s = s.replace(k, v)
     for k in _markers.keys():
         s = s.replace(k, m.get(k) or _markers[k])
     return s
@@ -424,7 +445,7 @@ def round(x, n=0):
     "https://realpython.com/python-rounding/"
     assert x == float(str(x))
     x = Decimal(str(x)).quantize(Decimal("1." + n * "0"), _rounding)
-    return int(x) if n == 0 else float(x)
+    return int(x) if n == 0 or x == 0 else float(x)
 
 
 def deg_min(a, n=None):
@@ -438,23 +459,41 @@ def deg_min(a, n=None):
     return copysign(d % 360, a), m
 
 
-def dm(a, n=None, rep={}):
+def f(v, s=None):
+    is_number = isinstance(v, int) or isinstance(v, float)
+    if is_number:
+        if s is None:
+            w = f(v, 1)
+        elif isinstance(s, int):
+            w = f(v, "00." + "0" * s) if s else f(v, "00")
+        elif isinstance(s, str):
+            if "{" in s:
+                w = s.format(v)
+            else:
+                s = s if "0" in s else s + "00.0"
+                m = len(s)
+                n = s.split(".")[1].count("0") if "." in s else 0
+                p = "+" if "+" in s else "-"
+                u = s[s.rfind("0") + 1:]
+                m -= len(u)
+                w = f(round(v, n), f"{{:{p}{m}.{n}f}}{u}")
+    elif s is None:
+        w = str(v)
+    else:
+        w = s.format(v) if "{" in s else f"{{:{s}}}".format(v)
+
+    return replace(w) if is_number else w
+
+
+def dm(a, n=None):
     "format as degrees and minutes: 000°00.0'"
     n = _decimals if n is None else n
     d, m = deg_min(a, n)
     k = (n + 3 if n else 2)
-    return replace(f"{d:3.0f}°{m:{k}.{n}f}'", rep)
+    return replace(f"{d:3.0f}°{m:{k}.{n}f}'")
 
 
-def mi(a, n=None, signed=False, nopad=False, rep={}):
-    "format as minutes: +00.0"
-    n = _decimals if n is None else n
-    m = round(60 * a, n)
-    k = 0 if nopad else ((n + 3 if n else 2) + (1 if signed else 0))
-    return replace(f"{m:{k}.{n}f}'", rep)
-
-
-def hms(H, signed=False, rep={}):
+def hms(H, s=False, rep={}):
     "format as HH:MM:SS"
     if H is None:
         return "--:--:--"
@@ -467,12 +506,12 @@ def hms(H, signed=False, rep={}):
     if m >= 60:
         m -= 60
         h += 1
-    pad = "-" if H < 0 else " " if signed else ""
+    pad = "-" if H < 0 else " " if s else ""
     return replace(f"{pad}{h:02.0f}:{m:02.0f}:{s:02.0f}", rep)
 
 
-def hm(H, signed=False, rep={}):
-    "format as HH:MM"
+def hm(H, s=False, rep={}):
+    "format hours as HH:MM"
     if H is None:
         return "--:--"
     h = int(abs(H))
@@ -480,24 +519,25 @@ def hm(H, signed=False, rep={}):
     if m >= 60:
         m -= 60
         h += 1
-    pad = "-" if H < 0 else " " if signed else ""
+    pad = "-" if H < 0 else " " if s else ""
     return replace(f"{pad}{h:02.0f}:{m:02.0f}", rep)
 
 
-def ms(H, signed=False, rep={}):
-    "format as MM:SS"
+def ms(H, s=False, rep={}):
+    "format minutes as MM:SS"
     if H is None:
         return "--:--"
-    m = int(60 * abs(H))
-    s = round(60 * (abs(60 * H) % 1))
+    m = int(abs(H))
+    s = round(60 * (abs(H) % 1))
     if s >= 60:
         s -= 60
         m += 1
-    pad = "-" if H < 0 else " " if signed else ""
+    pad = "-" if H < 0 else " " if s else ""
     return replace(f"{pad}{m:02.0f}:{s:02.0f}", rep)
 
 
 def angle(s):
+    "parse 'deg min sec'"
     for c in "°':":
         s = s.replace(c, " ")
     dms = s.split()
@@ -508,6 +548,7 @@ def angle(s):
 
 
 def parse(s):
+    "parse int, float, angle or leave as is"
     for t in int, float, angle:
         try:
             return t(s)
@@ -838,12 +879,9 @@ def render(template, variables={}, generate=False, progress=None):
     env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
     env.filters.update({
         "round": round,
-        "format": lambda v, f: f.format(v),
+        "f": f,
         "dm": dm,
-        "mi": mi,
-        "mip": partial(mi, nopad=1),
-        "mis": partial(mi, signed=1),
-        "hms": mi,
+        "hms": hms,
         "hm": hm,
         "ms": ms,
         "rep": replace,

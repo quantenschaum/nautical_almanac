@@ -124,8 +124,8 @@
 \addcontentsline{toc}{section}{Meridian Passages}
 \fancyhead{}
 \fancyhead[C]{\textsf{Equation of Time and Meridian Passages}}
-\includegraphics[width=\textwidth]{ {{-eqot_img(year, year|format("eqot-{}.pdf"))}}}
-\includegraphics[width=\textwidth]{ {{-mp_img(year, year|format("mp-{}.pdf"))}}}
+\includegraphics[width=\textwidth]{ {{-eqot_img(year, year|f("eqot-{}.pdf"))}}}
+\includegraphics[width=\textwidth]{ {{-mp_img(year, year|f("mp-{}.pdf"))}}}
 \clearpage
 
 \pagestyle{blank}
@@ -150,9 +150,9 @@ $\prime$ & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s
 & $^{\prime}$\phantom{=0}$^{\prime\prime}$ & s \\
 {%- for d in range(61) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "-}}
-{% for o in range(0,360,60) %}\textbf{ {{-(d+o)|format("{:3}")}}} & {{((d+o)/15)|hm}} & {% endfor -%}
-\textbf{ {{-d|format("{:3}")}}} & {%- for i in range(4) %}{{((d+i/4)/60/15)|ms}} {{"" if loop.last else "&"}} {% endfor -%}
-& \textbf{ {{-(d/60)|format("{:.1f}")+"=" if loop.index0%6==0 else ""}}{{-d|format("{:2}")}}} & {{(d/15)|format("{:.2f}")}} \\
+{% for o in range(0,360,60) %}\textbf{ {{-(d+o)|f("000")}}} & {{((d+o)/15)|hm}} & {% endfor -%}
+\textbf{ {{-d|f("000")}}} & {%- for i in range(4) %}{{((d+i/4)/60/15)|ms}} {{"" if loop.last else "&"}} {% endfor -%}
+& \textbf{ {{-(d/60)|f("0.0")+"=" if loop.index0%6==0 else ""}}{{-d|f("00")}}} & {{(d/15)|f("0.00")}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -178,9 +178,9 @@ $\circ$\phantom{00}$\prime$ & $\prime$ & $\prime$ & $\prime$ & $\prime$ & $\prim
 {%- for i in range(9*6+1) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}}
 {%- set a= i*3/60 if i<5*6 else 1.5+(i-5*6)*5/60 -%}
-{{a|dm(0)}} & {{corr(a,0,tab)|format("{:5.1f}")}} &
-{{-corr(a,SDw,tab)|format("{:+5.1f}")}} & {{corr(a,-SDw,tab)|format("{:+5.1f}")}} &
-{{-corr(a,SDs,tab)|format("{:+5.1f}")}} & {{corr(a,-SDs,tab)|format("{:+5.1f}")}} \\
+{{a|dm(0)}} & {{corr(a,0,tab)|f}} &
+{{-corr(a,SDw,tab)|f("+")}} & {{corr(a,-SDw,tab)|f("+")}} &
+{{-corr(a,SDs,tab)|f("+")}} & {{corr(a,-SDs,tab)|f("+")}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -195,9 +195,9 @@ $\circ$\phantom{00}$\prime$ & $\prime$ & $\prime$ & $\prime$ & $\prime$ & $\prim
 {%- for i in range(9*6+1) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}}
 {%- set a= 3.5+i*5/60 if i<5*6 else 6+(i-5*6)*10/60 -%}
-{{a|dm(0)}} & {{corr(a,0,tab)|format("{:5.1f}")}} &
-{{-corr(a,SDw,tab)|format("{:+5.1f}")}} & {{corr(a,-SDw,tab)|format("{:+5.1f}")}} &
-{{-corr(a,SDs,tab)|format("{:+5.1f}")}} & {{corr(a,-SDs,tab)|format("{:+5.1f}")}} \\
+{{a|dm(0)}} & {{corr(a,0,tab)|f}} &
+{{-corr(a,SDw,tab)|f("+")}} & {{corr(a,-SDw,tab)|f("+")}} &
+{{-corr(a,SDs,tab)|f("+")}} & {{corr(a,-SDs,tab)|f("+")}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -224,7 +224,7 @@ HoE & corr & HoE\V \\
 m & $\prime$ & ft\V \\
 {%- for i in range(55) %}
 {%- set d=d0+i*0.1 %}
-{{ idip(d)|format("{:4.1f}") }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- -d|format("{:4.1f}") }}}}}{% endif %} & {{ idip(d,feet=1)|format("{:4.1f}") }} \\
+{{ idip(d)|f}} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- -d|f }}}}}{% endif %} & {{ idip(d,feet=1)|f }} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -241,7 +241,7 @@ $\circ$\phantom{00}$\prime$ & $\prime$\V \\
 {%- for i in range(55) %}
 {%- set c = -5.3+i*0.1 %}
 {%- set a = icorr(c,SD=0,tab=tab) %}
-{{ a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|format("{:4.1f}") }}}}}{% endif %} \\
+{{ a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|f }}}}}{% endif %} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -261,13 +261,13 @@ $\circ$\phantom{00}$\prime$ & $\prime$ & $\prime$\V \\
 
 {%- set c = 10.8+i*0.1 %}
 {%- set a = icorr(c,SD=SDw,tab=tab) %}
-{{ a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|format("{:+5.1f}") }}}}}{% endif %} &
-                {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- (c-2*SDw)|format("{:+5.1f}") }}}}}{% endif %} &
+{{ a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|f("+") }}}}}{% endif %} &
+                {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- (c-2*SDw)|f("+") }}}}}{% endif %} &
 
 {%- set c = 10.6+i*0.1 %}
 {%- set a = icorr(c,SD=SDs,tab=tab) %}
-{{- a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|format("{:+5.1f}") }}}}}{% endif %} &
-                 {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- (c-2*SDs)|format("{:+5.1f}") }}}}}{% endif %} \\
+{{- a|dm(0) }} & {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- c|f("+") }}}}}{% endif %} &
+                 {% if not loop.last %}\smash{\makecell{~\\\textbf{ {{- (c-2*SDs)|f("+") }}}}}{% endif %} \\
 
 {%- endfor %}
 \hline
@@ -293,9 +293,9 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 \V Name & No & Mag & SHA & Dec \\
 \hline
 {%- for s in stars|sort %}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} {{s|format("{:15}")}} & \textbf{ {{-((stars.keys()|list).index(s)+1)|format("{:2}")}}} &
-{{- mag(t,s)|format("{:4.1f}") }} &
-{%- set sha,dec = sha_dec(t,s) %} {{sha|format("{:3.0f}")}} & {{dec|format("{:3.0f}")}} \\
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} {{s}} & \textbf{ {{-((stars.keys()|list).index(s)+1)|f(0)}}} &
+{{- mag(t,s)|f }} &
+{%- set sha,dec = sha_dec(t,s) %} {{sha|f(0)}} & {{dec|f(0)}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -305,9 +305,9 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 \V No & Name & Mag & SHA & Dec \\
 \hline
 {%- for s in stars %}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} \textbf{ {{-loop.index|format("{:2}")}}} & {{s|format("{:15}")}} &
-{{- mag(t,s)|format("{:4.1f}") }} &
-{%- set sha,dec = sha_dec(t,s) %} {{sha|format("{:3.0f}")}} & {{dec|format("{:3.0f}")}} \\
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} \textbf{ {{-loop.index|f(0)}}} & {{s}} &
+{{- mag(t,s)|f }} &
+{%- set sha,dec = sha_dec(t,s) %} {{sha|f(0)}} & {{dec|f(0)}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -355,30 +355,30 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 %
 {%- for d in range(pdays) %}{%- set td = t+days(d) %}
 {%- if td.day==1 %}
-\addcontentsline{toc}{subsection}{ {{-td|format("{:%B}")}}}
+\addcontentsline{toc}{subsection}{ {{-td|f("{:%B}")}}}
 {%- endif %}
 {%- endfor %}
 \fancyhead[LE,RO]{\textsf{\textbf{
-{{- t|format("{:%Y %B %d}") -}}
-, {{(t+days(1))|format("{:%d}" if (t+days(1)).month==(t+days(0)).month else "{:%B %d}")-}}
-, {{(t+days(2))|format("{:%d}" if (t+days(2)).month==(t+days(1)).month else "{:%B %d}")-}}
-~({{- t|format("{:%a}") -}}, {{(t+days(1))|format("{:%a}")-}}, {{(t+days(2))|format("{:%a}")-}})}}}
-\fancyhead[LO]{\footnotesize\textsf{$\Delta$UT1=UT1-UTC={{dut1(t)|round(4)|format("{:+}")}}s~~~~$\Delta$T=TT-UT1={{dtt(t)|round(4)|format("{:+}")}}s}}
+{{- t|f("{:%Y %B %d}") -}}
+, {{(t+days(1))|f("{:%d}" if (t+days(1)).month==(t+days(0)).month else "{:%B %d}")-}}
+, {{(t+days(2))|f("{:%d}" if (t+days(2)).month==(t+days(1)).month else "{:%B %d}")-}}
+~({{- t|f("{:%a}") -}}, {{(t+days(1))|f("{:%a}")-}}, {{(t+days(2))|f("{:%a}")-}})}}}
+\fancyhead[LO]{\footnotesize\textsf{$\Delta$UT1=UT1-UTC={{dut1(t)|f("+0.0000")}}s~~~~$\Delta$T=TT-UT1={{dtt(t)|f("+0.0000")}}s}}
 %
 % Aries and Planets {{D}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 \begin{tabular}[t]{|c|r|r|rr|rr|rr|rr|}
 \multicolumn{2}{c}{} & \multicolumn{1}{c}{\normalsize{Aries}}
-{%- for p in planets %} & \multicolumn{2}{c}{\normalsize {{p}} \scriptsize {{mag(t,p)|round(1)}}}{%- endfor -%}\\
+{%- for p in planets %} & \multicolumn{2}{c}{\normalsize {{p}} \scriptsize {{mag(t,p)|f}}}{%- endfor -%}\\
 {%- for d in range(pdays) %}{%- set td = t+days(d) %}
 \hline
 d & \V h & \multicolumn{1}{c|}{\GHA}
 {%- for p in planets %} & \multicolumn{1}{c}{\GHA} & \multicolumn{1}{c|}{\DEC}{%- endfor -%} \\
 \hline
 {% if loop.first and units %}\V &{%- for i in range(planets|length*2+1) %} & $\circ$\phantom{~00.}$\prime${% endfor -%} \\{% endif %}
-\multirow{ {{-24/dh}}}{*}{\begin{turn}{90}\small\V\textbf{ {{-td|format("{:%d %A}")}}}\end{turn}}
+\multirow{ {{-24/dh}}}{*}{\begin{turn}{90}\small\V\textbf{ {{-td|f("{:%d %A}")}}}\end{turn}}
 {%- for h in range(0,24,dh) %}{%- set th = td+hours(h) %}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}} & {{h|format("{:2}")}}
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}} & {{h|f(0)}}
 {%- set gha,dec = gha_dec(th,"Aries") %} & {{gha|dm}}
 {%- for p in planets %}
 {%- set gha,dec = gha_dec(th,p) %} & {{gha|dm}} & {{dec|dm}}
@@ -386,7 +386,7 @@ d & \V h & \multicolumn{1}{c|}{\GHA}
 {%- endfor %}
 \hline
 \V & \multicolumn{2}{r|}{\MP{} {{MP(td,"Aries")|hm-}}}
-{%- for p in planets %} & \multicolumn{1}{c}{\vval{} {{v_value(td,p)|mip}}} & \multicolumn{1}{c|}{\dval{} {{d_value(td,p)|mip}} }{%- endfor -%} \\
+{%- for p in planets %} & \multicolumn{1}{c}{\vval{} {{v_value(td,p)|f}}} & \multicolumn{1}{c|}{\dval{} {{d_value(td,p)|f}} }{%- endfor -%} \\
 \hline
 \multicolumn{1}{c}{}\\[-0.5ex]
 {%- endfor %}
@@ -402,7 +402,7 @@ d & \V h & \multicolumn{1}{c|}{\GHA}
 \hline
 {% if units %}\V & $\circ$\phantom{~00.}$\prime$ & $\circ$\phantom{~00.}$\prime$ \\{% endif %}
 {%- for s in stars|sort %}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} {{s|format("{:15}")}}
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "}} {{s}}
 {%- set sha,dec = sha_dec(t,s) %} & {{sha|dm}} & {{dec|dm}} \\
 {%- endfor %}
 \hline
@@ -413,10 +413,10 @@ d & \V h & \multicolumn{1}{c|}{\GHA}
 {%- for d in range(pdays) %}
 {%- set td = t+days(d) %}
 \hline
-\multicolumn{1}{|c}{\V\textbf{ {{td|format("{:%d %a}")-}} }}  & \multicolumn{1}{c}{\SHA} & \multicolumn{1}{c|}{\MP} \\
+\multicolumn{1}{|c}{\V\textbf{ {{td|f("{:%d %a}")-}} }}  & \multicolumn{1}{c}{\SHA} & \multicolumn{1}{c|}{\MP} \\
 \hline
 {%- for p in planets %}
-{{"\\V" if loop.first else "  "}} {{p|format("{:10}")}}
+{{"\\V" if loop.first else "  "}} {{p}}
 {%- set sha,dec = sha_dec(td,p) %} & {{sha|dm}} & \multicolumn{1}{c|}{ {{-MP(td,p)|hm-}} } \\
 {%- endfor %}
 \hline
@@ -438,13 +438,13 @@ d & \V h &
 {% if loop.first and units %}\V && $\circ$\phantom{~00.}$\prime$ & $\circ$\phantom{~00.}$\prime$
 & $\circ$\phantom{~00.}$\prime$ & $\prime$ & $\circ$\phantom{~00.}$\prime$ & $\prime$ & $\prime$ \\{% endif %}
 {%- for h in range(0,24,dh) %}{%- set th = td+hours(h) %}
-{%- if loop.first %}\multirow{ {{-24/dh}}}{*}{\begin{turn}{90}\small\V\textbf{ {{td|format("{:%d %A}")-}} }\end{turn}}{% endif %}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}} & {{h|format("{:2}")}}
+{%- if loop.first %}\multirow{ {{-24/dh}}}{*}{\begin{turn}{90}\small\V\textbf{ {{td|f("{:%d %A}")-}} }\end{turn}}{% endif %}
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%6==0 else "  "}} & {{h|f(0)}}
 {%- set gha,dec = gha_dec(th,"Sun") %} & {{gha|dm}} & {{dec|dm}}
-{%- set gha,dec = gha_dec(th,"Moon") %} & {{gha|dm}} & {{v_value(th,"Moon")|mi}} & {{dec|dm}} & {{d_value(th,"Moon")|mi}} & {{hp_moon(th)|mi}} \\
+{%- set gha,dec = gha_dec(th,"Moon") %} & {{gha|dm}} & {{v_value(th,"Moon")|f}} & {{dec|dm}} & {{d_value(th,"Moon")|f}} & {{hp_moon(th)|f}} \\
 {%- endfor %}
 \hline
-\V & & \multicolumn{1}{c}{\SD{} {{SD(td,"Sun")|mip}} {#-\vval{} {{v_value(td,"Sun")|mip}}#}} & \multicolumn{1}{c|}{\dval{} {{d_value(td,"Sun")|mip}}} & \multicolumn{5}{c|}{\SD{} {{SD(td,"Moon")|mip}}} \\
+\V & & \multicolumn{1}{c}{\SD{} {{SD(td,"Sun")|f}} {#-\vval{} {{v_value(td,"Sun")|f}}#}} & \multicolumn{1}{c|}{\dval{} {{d_value(td,"Sun")|f}}} & \multicolumn{5}{c|}{\SD{} {{SD(td,"Moon")|f}}} \\
 \hline
 \multicolumn{1}{c}{}\\[-0.5ex]
 {%- endfor %}
@@ -462,7 +462,7 @@ Lat & Naut. & Civil & Sunrise & Sunset & Civil & Naut. \\
 {% if units %}\V $\circ$ & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m \\{% endif %}
 {%- for l in latitudes %}
 {% set tw=twilight(t,l) -%}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index0%6==0 else "  "}} {{l|format("{:3}")}} &
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index0%6==0 else "  "}} {{l}} &
 {{-tw.get(2)|hm if tw.get(2) else tl if tw.get(4) else up if tw["max"]>3 else dn}} &
 {{-tw.get(3)|hm if tw.get(3) else tl if tw.get(4) else up if tw["max"]>3 else dn}} &
 {{-tw.get(4)|hm if tw.get(4) else up if tw["max"]>3 else dn}} &
@@ -477,13 +477,13 @@ Lat & Naut. & Civil & Sunrise & Sunset & Civil & Naut. \\
 %
 \hline
 \V  & \multicolumn{ {{-pdays}}}{c|}{Moonrise} & \multicolumn{ {{-pdays}}}{c|}{Moonset} \\
-Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|format("{:%d}")}}} {% endfor %}
-    {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|format("{:%d}")}}} {% endfor %} \\
+Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor %}
+    {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor %} \\
 \hline
 {% if units %}\V $\circ$ & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m \\{% endif %}
 {%- for l in latitudes %}
 {% set tw=twilight(t,l) -%}
-{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index0%6==0 else "  "}} {{l|format("{:3}")}}
+{{"\\V" if loop.first else "  "}}{{"\\D" if loop.index0%6==0 else "  "}} {{l}}
 {%- for d in range(pdays) %}{%- set td = t+days(d) %} {% set m=moon_rs(td,l) -%}
 & {{m.get(1)|hm if m.get(1) or m.get(0) else up if m["max"]>0 else dn}}
 {%- endfor %}
@@ -503,12 +503,12 @@ Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|format("{:%d}")}}} {% e
 \hline
 {% if units %}\V $\circ$ & m\phantom{:0}s & m\phantom{:0}s & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & d\phantom{\,00}\% \\{% endif %}
 {%- for d in range(pdays) %}{%- set td = t+days(d) %}
-{{"\\V" if loop.first else "  "}} \textbf{ {{-td|format("{:%d}")}}} &
+{{"\\V" if loop.first else "  "}} \textbf{ {{-td|f("{:%d}")}}} &
 {%- set eq=eqot(td) %}\colorbox{ {{-"Gray" if eq<0 else "white"}}}{ {{-eq|abs|ms}}} &
 {%- set eq=eqot(td+hours(12)) %}\colorbox{ {{-"Gray" if eq<0 else "white"}}}{ {{-eq|abs|ms}}} &
 {{-MP(td,"Sun")|hm}} &
 {{-MP(td,"Moon")|hm}} & {{MP(td,"Moon",upper=0)|hm}} &
-{{-age(td)|format("{:2.0f}")}}\,{{(phase(td)*100)|format("{:3.0f}")|rep}} \\
+{{-age(td)|f(0)}}\,{{(phase(td)*100)|f("000")|rep}} \\
 {%- endfor %}
 \hline
 \end{tabular}
@@ -544,10 +544,10 @@ v/d~~~corr & v/d~~~corr & v/d~~~corr \\
        $\prime$\phantom{000.}$\prime$ & $\prime$\phantom{000.}$\prime$ & $\prime$\phantom{000.}$\prime$ \\
 {%- for s in range(61) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "-}}
-{{s|format("{:3}")}} & {{inc_sun(m,s)|dm}} & {{inc_aries(m,s)|dm}} & {{inc_moon(m,s)|dm-}} &
-{%- set v=s/600 %}{{v|mi}} {{v_corr(m,30,v)|mi}} &
-{%- set v=s/300 %}{{v|mi}} {{v_corr(m,30,v)|mi}} &
-{%- set v=s/200 %}{{v|mi}} {{v_corr(m,30,v)|mi}} \\
+{{s}} & {{inc_sun(m,s)|dm}} & {{inc_aries(m,s)|dm}} & {{inc_moon(m,s)|dm-}} &
+{%- set v=s/600 %}{{v|f}} {{v_corr(m,30,v)|f}} &
+{%- set v=s/300 %}{{v|f}} {{v_corr(m,30,v)|f}} &
+{%- set v=s/200 %}{{v|f}} {{v_corr(m,30,v)|f}} \\
 {%- endfor %}
 \hline
 \end{tabular}

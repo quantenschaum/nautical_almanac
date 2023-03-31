@@ -34,7 +34,7 @@ The compilation of data tables containing the values is done using the [Jinja](h
 
 The output values of the SkyField based routines, which take quite some time to evaluate, are cached. The cache may be stored to disk and can be used in future runs to speed up the template rendering.
 
-The script also exposes a command line interface using `argparse` which allows to render a Jinja template and set various parameters. Just run `./almanac.py -h` to what it can do.
+The script also exposes a command line interface using `argparse` which allows to render a Jinja template and set various parameters. Just run `./almanac.py -h` to see what it can do.
 
 ## Templates
 
