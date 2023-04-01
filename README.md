@@ -4,7 +4,7 @@ This project was inspired by
 
 - https://thenauticalalmanac.com/
 - https://github.com/rodegerdts/Pyalmanac
-- https://github.com/aendie/SkyAlmanac-Py3 (I stole some stuff from there)
+- https://github.com/aendie/SkyAlmanac-Py3
 
 Thank you for your work!
 
