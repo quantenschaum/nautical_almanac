@@ -64,6 +64,7 @@
 \newcommand{\EOT}{EoT}
 \definecolor{Gray}{gray}{0.85}
 \definecolor{Yellow}{rgb}{1,1,0.8}
+\definecolor{Blue}{rgb}{0.9,0.95,1}
 
 \setlength\parindent{0pt}
 
@@ -164,6 +165,7 @@ $\prime$ & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s
 % Altitude Correction 0°-10° %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 \pagestyle{data}
+%\pagecolor{Yellow}
 \addcontentsline{toc}{section}{Altitude Correction Tables 0°--10°}
 \small
 \fancyhead{}
@@ -527,6 +529,7 @@ Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor
 % Increments and Corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 \pagestyle{data}
+%\pagecolor{Blue}
 \addcontentsline{toc}{section}{Increments and Corrections}
 \fancyhead{}
 \fancyhead[C]{\textsf{Increments and Corrections}}
@@ -561,6 +564,7 @@ v/d~~~corr & v/d~~~corr & v/d~~~corr \\
 \enskip
 {%- endif %}
 {%- endfor %}
+\nopagecolor
 
 
 \end{document}
