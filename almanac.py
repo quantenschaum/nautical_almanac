@@ -452,6 +452,9 @@ round0 = round
 
 def round(x, n=0, mode=ROUND_HALF_UP):
     "https://realpython.com/python-rounding/"
+    if mode is None:
+        x = round0(x, n)
+        return int(x) if n == 0 or x == 0 else x
     assert x == float(str(x))
     x = Decimal(str(x)).quantize(Decimal("1." + "0" * n), mode)
     return int(x) if n == 0 or x == 0 else float(x)
