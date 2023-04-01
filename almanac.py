@@ -299,7 +299,7 @@ def d_value(t, b):
     gha0, dec0 = gha_dec(t, b)
     gha1, dec1 = gha_dec(t + timedelta(hours=1), b)
     dec0, dec1 = dec0 * 60, dec1 * 60
-    # dec0, dec1 = round(dec0, 1) / 60, round(dec1, 1) / 60
+    # dec0, dec1 = round(dec0 * 60, 1) / 60, round(dec1 * 60, 1) / 60
     return abs(dec1) - abs(dec0) if dec0 * dec1 > 0 else (dec1 - dec0)
 
 
