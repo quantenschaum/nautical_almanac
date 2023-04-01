@@ -66,7 +66,7 @@ The values also agree with those computed by SkyAlmanac (the routines are effect
 
 The GHA of the Sun is treated differently in the Nautical Alamanac.
 
-In the explanations if the NA, in section "[Main Data](exp1.png)" and "[Accuracy](exp2.png)" it says
+The explanations in the NA, in section "[Main Data](exp1.png)" and "[Accuracy](exp2.png)" say
 
 > v for the Sun is negligible and is omitted
 
