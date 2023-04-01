@@ -59,9 +59,7 @@ There is a `makefile` for this job.
 I have a copy of the Paracay Nautical Almanac 2021 and some pages of other years are available online
 
 - [Wikipedia](https://en.wikipedia.org/wiki/Nautical_almanac)
-- [Training NA 1981 A](https://maritimesafetyinnovationlab.org/wp-content/uploads/2015/01/nautical-almanac-1981.pdf)
-- [Training NA 1981 B](https://www.dco.uscg.mil/Portals/9/NMC/pdfs/examinations/10_1981_nautical_almanac.pdf)
-- [Training NA 1981 C](http://fer3.com/arc/imgx/Nautical-Almanac-1981-(ReedNavigation.com-edit).pdf)
+- [Training NA 1981 A](https://maritimesafetyinnovationlab.org/wp-content/uploads/2015/01/nautical-almanac-1981.pdf), [Training NA 1981 B](https://www.dco.uscg.mil/Portals/9/NMC/pdfs/examinations/10_1981_nautical_almanac.pdf), [Training NA 1981 C](http://fer3.com/arc/imgx/Nautical-Almanac-1981-(ReedNavigation.com-edit).pdf)
 - [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf)
 
 The `daily-pages-yyyy-....txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP).
