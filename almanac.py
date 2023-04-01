@@ -471,29 +471,25 @@ def deg_min(a, n=None):
     return copysign(d % 360, a), m
 
 
-def f(v, s=None):
+def f(v, s=""):
+    "formatter, supply format s for numbers as +00.0"
     if is_number(v):
-        if s is None:
-            w = f(v, 1)
-        elif isinstance(s, int):
+        if isinstance(s, int):
             w = f(v, " 0." + "0" * s) if s else f(v, " 0")
         elif isinstance(s, str):
             if "{" in s:
                 w = s.format(v)
             else:
-                s = s if "0" in s else s + " 0.0"
-                m = len(s)
-                n = s.split(".")[1].count("0") if "." in s else 0
-                p = "+" if "+" in s else " " if "-" in s else "-"
-                p += "0" if s.split(".")[0].count("0") > 1 else ""
-                u = s[s.rfind("0") + 1:]
-                m -= len(u)
-                ff = f"{{:{p}{m}.{n}f}}{u}"
+                s = s if "0" in s else s + " 0.0"  # default format if nothing or only sign is given
+                m = len(s)  # total width of string
+                n = s.split(".")[1].count("0") if "." in s else 0  # digits after .
+                p = "+" if "+" in s else " " if "-" in s else "-"  # sign prefix
+                p += "0" if s.split(".")[0].count("0") > 1 else ""  # zero padding
+                u = s[s.rfind("0") + 1:]  # suffix (unit)
+                m -= len(u)  # suffix does not count into total width
                 w = f(round(v, n), f"{{:{p}{m}.{n}f}}{u}")
-    elif s is None:
-        w = str(v)
     else:
-        w = s.format(v) if "{" in s else f"{{:{s}}}".format(v)
+        w = s.format(v) if isinstance(s, str) and "{" in s else f"{v:{s}}"
 
     return replace(w) if is_number(v) else w
 
