@@ -207,16 +207,21 @@ def sha_dec(t, b):
     return sha, dec
 
 
+def gha_dec(t, b, sunvcorr=False):
+    gha, dec = _gha_dec(t, b)
+    if sunvcorr and b == "Sun":  # add v/2 to SUN's GHA as explained in the NA
+        gha = (gha + v_value(t, b) / 120) % 360
+    return gha, dec
+
+
 @cached(_caches["gha"])
-def gha_dec(t, b, sun_vcorr=False):
+def _gha_dec(t, b):
     "GHA and Dec of body b at time t in degrees"
     if _gha == 0 or _gha == 2 and b == ARIES:
         if b == ARIES:
             return 15 * time(t).gast, 0.0  # ICRS right ascension (0) + gast
         sha, dec = sha_dec(t, b)
         gha = (sha + gha_dec(t, ARIES)[0]) % 360
-        if sun_vcorr and b == "Sun":
-            return gha + v_value(t, b) / 60 / 2, dec  # add v value as explained in the NA
         return gha, dec
 
     # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
