@@ -235,24 +235,6 @@ def is_number(v):
     return isinstance(v, int) or isinstance(v, float)
 
 
-def gha_comparison():
-    global _gha
-    init()
-    t = datetime(2023, 1, 1, 13)
-    print(t, "UT1")
-    print("Object      M   GHA          Dec          SHA          Dec")
-    for b in ARIES, "Sun", "Vega":
-        for i in range(3):
-            _gha = i
-            a = [b, i]
-            a += gha_dec(t, b)
-            a += sha_dec(t, b)
-            s = ""
-            for k, v in enumerate(a):
-                s += f"{v:12.8f} " if isinstance(v, float) else f"{v:6} "
-            print(s)
-
-
 def lha_dec(t, b, lon):
     "LHA and Dec of body b at time t in degrees"
     gha, dec = gha_dec(t, b)
@@ -467,13 +449,11 @@ def replace(s, m={}):
 
 round0 = round
 
-_rounding = ROUND_HALF_UP
 
-
-def round(x, n=0):
+def round(x, n=0, mode=ROUND_HALF_UP):
     "https://realpython.com/python-rounding/"
     assert x == float(str(x))
-    x = Decimal(str(x)).quantize(Decimal("1." + n * "0"), _rounding)
+    x = Decimal(str(x)).quantize(Decimal("1." + "0" * n), mode)
     return int(x) if n == 0 or x == 0 else float(x)
 
 

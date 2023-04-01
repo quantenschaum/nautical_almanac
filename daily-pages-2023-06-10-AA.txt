@@ -1,4 +1,4 @@
-AirAlmanac 2023
+AirAlmanac 2023 https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf
 
 2023 June 10 (Sat)  dUT1=UT1-UTC=-0.0239s  dTT=TT-UT1=+69.2079s
 

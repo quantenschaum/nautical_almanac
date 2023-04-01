@@ -1,4 +1,4 @@
-AirAlmanac 2023
+AirAlmanac 2023 https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf
 
 2023 January 01 (Sun)  dUT1=UT1-UTC=-0.0199s  dTT=TT-UT1=+69.2039s
 

@@ -1,4 +1,4 @@
-NA 2002 (wikipedia)
+NA 2002 (https://en.wikipedia.org/wiki/Nautical_almanac)
 
 2002 May 10 (Fri)  dUT1=UT1-UTC=-0.2167s  dTT=TT-UT1=+64.4007s
 

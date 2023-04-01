@@ -1,4 +1,4 @@
-Data from ezAlamanac 2023
+Data from EZ Alamanac 2023 https://www.amazon.de/2023-EZ-Celestial-Nautical-Almanac/dp/B0B289PRR7/
 
 2023 January 01 (Sun)  dUT1=UT1-UTC=-0.0199s  dTT=TT-UT1=+69.2039s
 
