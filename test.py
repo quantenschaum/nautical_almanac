@@ -177,7 +177,7 @@ def compare(filename):
     r = "body", "value", "maxdev", "dev", "tot"
     # print(f"{r[0]:15} {r[1]:6} {r[2]:6} {r[3]:>6}/{r[4]}")
     for r in diff2:
-        if r[2] and r[0] == "Sun":
+        if r[2]:
             print(f"{r[0]:15} {r[1]:6} {r[2]:6.4f} {r[3]:6}/{r[4]}")
 
 
