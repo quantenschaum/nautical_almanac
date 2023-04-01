@@ -20,7 +20,7 @@ UT |        Sun        |               Moon                |   Aries  |{%- for p
    |    GHA      Dec   |    GHA     v     Dec      d   HP  |    GHA   |{%- for p in planets %}    GHA      Dec   |{% endfor %}
  h |   °   '    °   '  |   °   '    '    °   '     '    '  |   °   '  |{%- for p in planets %}   °   '    °   '  |{% endfor %}
 {% for h in range(nhours) -%}
-{%- set th = t+duration(hours=h) %}{{th.hour|f(" 0")}} |
+{%- set th = t+hours(h) %}{{th.hour|f(" 0")}} |
 {%- set gha,dec=gha_dec(th,"Sun",sunvcorr) %} {{gha|dm}} {{dec|dm}} |
 {%- set gha,dec=gha_dec(th,"Moon") %} {{gha|dm}} {{v_value(th,"Moon")|f}} {{dec|dm}} {{d_value(th,"Moon")|f("-")}} {{hp_moon(th)|f}} |
 {%- set gha,dec=gha_dec(th,"Aries") %} {{gha|dm}} |

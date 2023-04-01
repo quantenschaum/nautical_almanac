@@ -3,7 +3,7 @@ import atexit
 import pickle
 from collections import defaultdict
 from datetime import datetime, date
-from datetime import timedelta as duration
+from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from math import copysign, floor, cos, nan, sqrt, atan, sin, asin, acos, radians, degrees
 from os.path import isfile
@@ -171,7 +171,7 @@ def dtime(t):
     c[5] = round(c[5])
     if c[5] >= 60:
         c[5] -= 60
-        return datetime(*c) + duration(minutes=1)
+        return datetime(*c) + timedelta(minutes=1)
     return datetime(*c)
 
 
@@ -297,7 +297,7 @@ def hp_moon(t):
 def d_value(t, b):
     "d value of body b (rate of change of DEC) in arc minutes/hour"
     gha0, dec0 = gha_dec(t, b)
-    gha1, dec1 = gha_dec(t + duration(hours=1), b)
+    gha1, dec1 = gha_dec(t + timedelta(hours=1), b)
     dec0, dec1 = dec0 * 60, dec1 * 60
     # dec0, dec1 = round(dec0, 1) / 60, round(dec1, 1) / 60
     return abs(dec1) - abs(dec0) if dec0 * dec1 > 0 else (dec1 - dec0)
@@ -306,7 +306,7 @@ def d_value(t, b):
 def v_value(t, b):
     "v values of body b (excess rate of change of GHA) in arc minutes/hour"
     gha0, dec0 = gha_dec(t, b)
-    gha1, dec1 = gha_dec(t + duration(hours=1), b)
+    gha1, dec1 = gha_dec(t + timedelta(hours=1), b)
     base = (14 + 19 / 60) if b == "Moon" else 15
     # gha0, gha1 = round(gha0 * 60, 1) / 60, round(gha1 * 60, 1) / 60
     return ((gha1 - gha0) % 360 - base) * 60
@@ -338,7 +338,7 @@ def equation_of_time(t):
 def meridian_passage(t, b, lon=0, upper=True):
     "time of meridian passage of body b at date t in hours"
     f = almanac.meridian_transits(eph, bodies[b], wgs84.latlon(0, lon))
-    t0, t1 = time(t), time(t + duration(hours=24))
+    t0, t1 = time(t), time(t + timedelta(hours=24))
     times, events = almanac.find_discrete(t0, t1, f)
     times = times[events == bool(upper)]
     #     assert len(times) <= 1,(s,t0,t1,times)
@@ -350,7 +350,7 @@ def meridian_passage(t, b, lon=0, upper=True):
 @cached(_caches["sr"])
 def sunrise_sunset(t, lat, lon=0):
     "sunset/sunrise times 1=rise 0=set"
-    t0, t1 = time(t), time(t + duration(hours=24))
+    t0, t1 = time(t), time(t + timedelta(hours=24))
     f = almanac.sunrise_sunset(eph, wgs84.latlon(lat, lon))
     times, events = almanac.find_discrete(t0, t1, f)
     f0 = int(f(t0))
@@ -372,7 +372,7 @@ def twilight(t, lat, lon=0):
     4 = day, sun is up
     negative sign, if sun is going down
     """
-    t0, t1 = time(t), time(t + duration(hours=24))
+    t0, t1 = time(t), time(t + timedelta(hours=24))
     f = almanac.dark_twilight_day(eph, wgs84.latlon(lat, lon))
     f.step_days = 0.01
     times, events = almanac.find_discrete(t0, t1, f)
@@ -396,7 +396,7 @@ def moon_rise_set(t, lat, lon=0):
     sd = semi_diameter(t, s) / 60
     f = almanac.risings_and_settings(eph, bodies[s], wgs84.latlon(lat, lon), radius_degrees=sd)
     f.step_days = 0.01
-    t0, t1 = time(t), time(t + duration(hours=24))
+    t0, t1 = time(t), time(t + timedelta(hours=24))
     times, events = almanac.find_discrete(t0, t1, f)
     f0 = int(f(t0))
     data = {"t0": f0, "min": f0, "max": f0}
@@ -410,7 +410,7 @@ def moon_rise_set(t, lat, lon=0):
 @cached(_caches["ma"])
 def moon_age_phase(t):
     "moon age (time since new moon) in days and phase (fraction illuminated)"
-    t0, t1 = time(t - duration(days=30)), time(t + duration(hours=24))
+    t0, t1 = time(t - timedelta(days=30)), time(t + timedelta(hours=24))
     p = almanac.moon_phase(eph, time(t)).radians
     illum = (1 - cos(p)) / 2
     times, events = almanac.find_discrete(t0, t1, almanac.moon_phases(eph))
@@ -833,7 +833,7 @@ def eqot_img(year, filename=None, size=(16, 9)):
     xticks = []
     xlabels = []
     for d in Bar(filename or "Equation of Time Graph", max=365, suffix="%(percent)d%% %(eta_td)s").iter(range(365)):
-        t = datetime(year, 1, 1) + duration(days=d)
+        t = datetime(year, 1, 1) + timedelta(days=d)
         if t.day in [1, 10, 20]:
             xticks.append(d)
             xlabels.append(f"{t:%b}" if t.day == 1 else t.day)
@@ -867,7 +867,7 @@ def mp_img(year, filename=None, size=(16, 9)):
     xticks = []
     xlabels = []
     for d in Bar(filename or "Meridian Passages Graph", max=365, suffix="%(percent)d%% %(eta_td)s").iter(range(365)):
-        t = datetime(year, 1, 1) + duration(days=d)
+        t = datetime(year, 1, 1) + timedelta(days=d)
         if t.day in [1, 10, 20]:
             xticks.append(d)
             xlabels.append(f"{t:%b}" if t.day == 1 else t.day)
@@ -912,9 +912,9 @@ def render(template, variables={}, generate=False, progress=None):
         "today": datetime.utcnow().date(),
         "time": time,
         "datetime": datetime,
-        "duration": duration,
-        "days": lambda n: duration(days=n),
-        "hours": lambda n: duration(hours=n),
+        "delta": timedelta,
+        "days": lambda n: timedelta(days=n),
+        "hours": lambda n: timedelta(hours=n),
         "dut1": delta_ut1,
         "dtt": delta_t,
         "gha_dec": gha_dec,
@@ -958,78 +958,15 @@ def render(template, variables={}, generate=False, progress=None):
     return template.generate() if generate else template.render()
 
 
-def main():
-    from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-
-    parser = ArgumentParser(
-        prog="almanac",
-        description="astro navigation tables generator",
-        formatter_class=ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument("template", help="jinja template to render")
-    parser.add_argument("variables", help="set variables name=value", nargs="*")
-    parser.add_argument("-o", "--output", metavar="file", help="output file, - for stdout")
-    parser.add_argument("-f", "--force", action="store_true", help="force overwrite")
-    parser.add_argument("-c", "--cache", action="store_true", help="load/save cached values")
-    parser.add_argument("-y", "--year", type=int, default=datetime.utcnow().year, help="year to generate data for")
-    parser.add_argument("-s", "--start", type=int, default=0, help="offset for start day of year")
-    parser.add_argument("-d", "--days", type=int, default=365, help="number of days to generate")
-    parser.add_argument("-F", "--no-finals", action="store_true", help="do not use IERS time data (implies -P)")
-    parser.add_argument("-P", "--no-polar", action="store_true", help="do not correct for polar motion")
-    parser.add_argument("-e", "--ephemeris", metavar="file", default="de440s", help="ephemeris file to use")
-    args = parser.parse_args()
-
-    iers_time = not args.no_finals
-    polar_motion = iers_time and not args.no_polar
-
-    variables = {
-        "year": args.year,
-        "odays": args.start,
-        "ndays": args.days,
-        "iers_time": iers_time,
-        "polar_motion": polar_motion,
-        "ephemeris": args.ephemeris,
-    }
-
-    variables.update({v.split("=", 1)[0]: parse(v.split("=", 1)[1]) for v in args.variables})
-
-    init(iers_time, polar_motion, args.ephemeris, args.cache)
-
-    assert isfile(args.template), args.template + " template not found"
-
-    if args.output and args.output == "-":
-        for l in render(args.template, variables=variables, generate=1):
-            print(l, end="")
-    else:
-        out = args.output or args.template.replace(".j2", "")
-        assert not isfile(out) or args.force, out + " exists, use -f to overwrite"
-        bar = Bar(out, max=args.days, suffix="%(percent)d%% %(eta_td)s")
-        with open(out, "w") as f:
-            for l in render(args.template, variables=variables, generate=1, progress=bar):
-                f.write(l)
-        bar.finish()
-
-
-if 0:
-    init()
-    for i in range(365):
-        t = datetime(2021, 1, 1) + duration(days=i)
-        print(f"{i:3}", end=" ")
-        for b in "Sun", "Venus", "Mars", "Jupiter", "Saturn":
-            print(b[0], mi(v_value(t, b)), mi(d_value(t, b), signed=0), end=" ")
-        print()
-
-if 0:
-    init()
-
+def calculate():
     import pyinputplus as pyip
 
-    now = datetime0.utcnow()
+    now = datetime.utcnow()
     d = pyip.inputDate(f"date ({now:%Y-%m-%d}): ",
                        blank=True,
                        formats=("%d.%m.%Y", "%d.%m.%y", "%Y-%m-%d", "%y-%m-%d")) or now.date()
     t = pyip.inputTime(f"time ({now:%H:%M:%S}): ", blank=True) or now.time()
-    t = datetime0.combine(d, t).replace(tzinfo=utc)
+    t = datetime.combine(d, t)
     t = time(t)
     print(dtime(t))
     b = pyip.inputStr("Body (Sun, Moon, Planet, Star): ", blank=True) or "Sun"
@@ -1052,19 +989,79 @@ if 0:
     hs = pyip.inputCustom(angle, "Height of Sextant: ")
     print("Hs ", dm(hs))
     he = pyip.inputFloat("Heigt of Eye (m): ", blank=True) or 2
-    dipc = -dip(he) / 60
-    print("HoE", f"{he:.1f}m", "DIP", mi(dipc))
-    ha = hs + dipc
+    dipc = -dip(he)
+    print("HoE", f"{he:.1f}m", "DIP", f(dipc))
+    ha = hs + dipc / 60
     print("Ha ", dm(ha))
     sd = semi_diameter(t, b) if b == "Sun" else 0
     if sd:
         sd *= -1 if (pyip.inputStr("Limb (L/U): ", blank=True) or "L").upper() == "U" else 1
-    acorr = corr(ha, sd * 60) / 60
-    print("AC ", mi(acorr), f"SD {mi(sd)}" if sd else "")
-    ho = hs + dipc + acorr
+    acorr = corr(ha, sd)
+    print("AC ", f(acorr), f"SD {f(sd)}" if sd else "")
+    ho = ha + acorr / 60
     print("Ho ", dm(ho))
-    ic = ho - hc
+    ic = (ho - hc)
     print("Intercept", dm(ic))
+
+
+def main():
+    from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
+    parser = ArgumentParser(
+        prog="almanac",
+        description="astro navigation tables generator",
+        formatter_class=ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("template", help="jinja template to render", nargs="?")
+    parser.add_argument("-o", "--output", metavar="file", help="output file, - for stdout")
+    parser.add_argument("-f", "--force", action="store_true", help="force overwrite")
+    parser.add_argument("-c", "--cache", action="store_true", help="load/save cached values")
+    parser.add_argument("-y", "--year", type=int, default=datetime.utcnow().year, help="year to generate data for")
+    parser.add_argument("-s", "--start", type=int, default=0, help="offset for start day of year")
+    parser.add_argument("-d", "--days", type=int, default=365, help="number of days to generate")
+    parser.add_argument("-S", "--set", help="set variables with name=value", action="append")
+    parser.add_argument("-F", "--no-finals", action="store_true", help="do not use IERS time data (implies -P)")
+    parser.add_argument("-P", "--no-polar", action="store_true", help="do not correct for polar motion")
+    parser.add_argument("-e", "--ephemeris", metavar="file", default="de440s", help="ephemeris file to use")
+    parser.add_argument("-C", "--calculate", action="store_true", help="interactive sight reduction calculation")
+    args = parser.parse_args()
+
+    iers_time = not args.no_finals
+    polar_motion = iers_time and not args.no_polar
+
+    init(iers_time, polar_motion, args.ephemeris, args.cache)
+
+    if args.calculate:
+        calculate()
+        return
+
+    assert args.template, "no template"
+    assert isfile(args.template), args.template + " template not found"
+
+    variables = {
+        "year": args.year,
+        "odays": args.start,
+        "ndays": args.days,
+        "iers_time": iers_time,
+        "polar_motion": polar_motion,
+        "ephemeris": args.ephemeris,
+    }
+
+    if args.set:
+        variables.update({v.split("=", 1)[0]: parse(v.split("=", 1)[1]) for v in args.set})
+
+    if args.output and args.output == "-":
+        for l in render(args.template, variables=variables, generate=1):
+            print(l, end="")
+    else:
+        out = args.output or args.template.replace(".j2", "")
+        assert not isfile(out) or args.force, out + " exists, use -f to overwrite"
+        bar = Bar(out, max=args.days, suffix="%(percent)d%% %(eta_td)s")
+        with open(out, "w") as f:
+            for l in render(args.template, variables=variables, generate=1, progress=bar):
+                f.write(l)
+        bar.finish()
+
 
 if __name__ == "__main__":
     main()
