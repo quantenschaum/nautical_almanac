@@ -58,21 +58,25 @@ There is a `makefile` for this job.
 
 I have a copy of the Paracay Nautical Almanac 2021 and some pages of other years are available online ([Wikipedia](https://en.wikipedia.org/wiki/Nautical_almanac), [here](https://maritimesafetyinnovationlab.org/wp-content/uploads/2015/01/nautical-almanac-1981.pdf), [here](https://www.dco.uscg.mil/Portals/9/NMC/pdfs/examinations/10_1981_nautical_almanac.pdf), [here](http://fer3.com/arc/imgx/Nautical-Almanac-1981-(ReedNavigation.com-edit).pdf)). The `daily-pages-yyyy-....txt` files contain data from these sources for reference and can automatically be compared to calculated values using `test.py` (WIP). The [AirAlmanac](https://aa.usno.navy.mil/downloads/publications/aira23_all.pdf) is also freely available online and can be used for comparison.
 
-Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1' except the GHA of the Sun which is up to 0.2' systematically off (in 23, 21 but not 02). GHA of Aries matches exactly, stars, Moon and planets match exactly for the majority of the values. see GHA of Sun below
+Currently, the computed values of GHA/SHA and Dec agree with those published in the commercial almanac within 0.1'. GHA of Aries matches exactly, stars, Moon and planets match exactly for the majority of the values.
 
-GHA of Sun and Aries matches the values given in the AirAlmanac exactly. So, GHA of Sun is different in AA and NA by up to 0.2'. Why? Moon Dec is off by >1' compared to the AA, but it is only tabulated with integer minutes.
-
-The values also agree with those computed by SkyAlmanac (the routines are effectively the same). The SkyAlmanac is also off on the Sun's values.
+The values also agree with those computed by SkyAlmanac (the routines are effectively the same).
 
 ### GHA of Sun
 
-In the explanations if the NA, in section "[Main Data](exp1.png)" and "[Accuracy](exp2.png)" mention the following
+The GHA of the Sun is treated differently in the Nautical Alamanac.
+
+In the explanations if the NA, in section "[Main Data](exp1.png)" and "[Accuracy](exp2.png)" it says
 
 > v for the Sun is negligible and is omitted
 
 > The quantities tabulated in this Almanac are generally correct to the nearest 0.1'; the exception is the Sun's GHA which is deliberately adjusted by up to 0.15' to reduce the error due to ignoring the v-correction.
 
-This explains the systematic difference of the GHA of the Sun. Adding v/2 to the GHA makes this offset disappear.
+This explains the systematic difference of the GHA of the Sun. Adding v/2 to the GHA makes this offset disappear. In `test.py` this correction is applied when comparing with data from the NA. This correction can be enabled by setting `sunvcorr=1` when generating tables.
+
+In the AirAlamanac this correction is not applied.
+
+IMHO this does not make much sense. They say v is "negligible" and omit it in the NA, but then they "deliberately adjust" the GHA to "reduce the error due to ignoring v". This is a contradiction. On the other hand, adding v/2 produces correct GHAs for times close to hh:30 but it's off at hh:00, without this correction GHA would be correct at hh:00, but off at hh:30. So, it just shifts the error but does not remove it and the tabulated values for integer hours are off. It would have been easier to just print this single v value as it is done for the planets and list unchanged GHAs. Even without v printed one could interpolate between two GHAs directly (calculating v from the tabulated GHAs).
 
 ## GHA and Dec
 

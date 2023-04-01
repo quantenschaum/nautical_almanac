@@ -208,7 +208,7 @@ def sha_dec(t, b):
 
 
 @cached(_caches["gha"])
-def gha_dec(t, b, sun_vcorr=1):
+def gha_dec(t, b, sun_vcorr=False):
     "GHA and Dec of body b at time t in degrees"
     if _gha == 0 or _gha == 2 and b == ARIES:
         if b == ARIES:
@@ -300,8 +300,8 @@ def d_value(t, b):
 
 def v_value(t, b):
     "v values of body b (excess rate of change of GHA) in arc minutes/hour"
-    gha0, dec0 = gha_dec(t, b, 0)
-    gha1, dec1 = gha_dec(t + duration(hours=1), b, 0)
+    gha0, dec0 = gha_dec(t, b)
+    gha1, dec1 = gha_dec(t + duration(hours=1), b)
     base = (14 + 19 / 60) if b == "Moon" else 15
     # gha0, gha1 = round(gha0 * 60, 1) / 60, round(gha1 * 60, 1) / 60
     return ((gha1 - gha0) % 360 - base) * 60

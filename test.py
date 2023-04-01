@@ -110,13 +110,15 @@ def read_page(filename):
 
 
 def compare(filename):
+    aa = "AA" in filename  # AirAlmanac
+    na = "NA" in filename or "EZ" in filename  # NauticalAlmanac
     data = read_page(filename)
     init()
     diff = {}
     for r in data:
         t, b, n, v = r
         if n == "GHA":
-            w = gha_dec(t, b)[0]
+            w = gha_dec(t, b, na)[0]
         elif n == "Dec":
             w = gha_dec(t, b)[1]
         elif n == "SHA":
@@ -160,7 +162,6 @@ def compare(filename):
         if n in ["GHA", "SHA", "Dec", "MP", "Upper", "Lower"]:
             d *= 60
         mm = diff.setdefault(b, {}).setdefault(n, [0, 0, 0])
-        aa = "AA" in filename  # AirAlmanac
         if not (b == "Moon" and aa):
             assert d <= (0.25 if n in ["GHA", "Dec"] else 1), (filename, r, w, d)
         mm[0] = max(mm[0], d)
