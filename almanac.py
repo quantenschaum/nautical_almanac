@@ -202,13 +202,20 @@ def delta_t(t):
 _gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 with GHAA of 0
 
 
+# @cached({})
+def observe(t, b, a=True):
+    o = earth.at(t).observe(bodies[b])
+    return o.apparent() if a else o
+
+
 @cached(_cache["sha"])
 def sha_dec(t, b):
     "SHA and Dec of body b at time t in degrees"
     if _gha == 0:
         if b == ARIES:
             return 0.0, 0.0
-        ra, dec, _ = earth.at(time(t)).observe(bodies[b]).apparent().radec("date")
+        t = time(t)
+        ra, dec, _ = observe(t, b).radec("date")
         return -ra._degrees % 360, dec.degrees
     gha, dec = gha_dec(t, b)
     sha = (gha - gha_dec(t, ARIES)[0]) % 360
@@ -234,7 +241,8 @@ def _gha_dec(t, b):
 
     # using frame_latlon instead of radec+gast also aplies time.M and polar_motion_matrix
     # which results in ITRS GHA, Dec but do not match the values from the almanac
-    lat, lon, _ = earth.at(time(t)).observe(bodies[b]).apparent().frame_latlon(itrs)
+    t = time(t)
+    lat, lon, _ = observe(t, b).frame_latlon(itrs)
     dec, gha = lat.degrees, -lon.degrees % 360
     return gha, dec
 
@@ -274,7 +282,7 @@ def alt_az(t, b, lat, lon, sky=0):
 def semi_diameter(t, b):
     "semi diameter of body b at time t in arc minutes"
     t = time(t)
-    _, _, dist = earth.at(t).observe(bodies[b]).apparent().radec(t)
+    _, _, dist = observe(t, b).radec(t)
     radius = {"Sun": 695997, "Moon": 1739.9}  # km
     return degrees(atan(radius[b] / dist.km)) * 60
 
@@ -309,7 +317,7 @@ def magnitude(t, b):
     if b in stars:
         return star_df.loc[stars[b]].magnitude
     else:
-        m = planetary_magnitude(earth.at(t).observe(bodies[b]).apparent())
+        m = planetary_magnitude(observe(t, b))
         return float(m)
 
 
@@ -1019,13 +1027,16 @@ def parallel(args, variables):
     set_start_method('spawn')
     n = args.parallel
     m = args.days // n
+    m += 3 - m % 3  # make multiple of 3 because pages contain 3 days
+    assert not m % 3, m
+    l = max(0, args.days - (n - 1) * m)  # last seqment
     processes = []
     k = Queue()
     variables["push_cache"] = True
     variables["cache"] = "r" if args.cache else None
     for i in range(n):
         variables["odays"] = args.start + i * m
-        variables["ndays"] = m if i < n - 1 else args.days - i * m
+        variables["ndays"] = m if i < n - 1 else l
         p = Process(target=process, args=(args.template, DEVNULL, variables, k.put_nowait))
         processes.append(p)
         p.start()
