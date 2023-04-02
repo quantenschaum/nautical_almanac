@@ -10,7 +10,7 @@ IERS polar motion data until {{iers("P","I")}}, predictions until {{iers("P","P"
 {%- endif %}
 {%- endif %}
 
-{% for d in range(odays,odays+ndays) %}
+{% for d in range(odays,odays+ndays,nhours//24) %}
 {%- set t = datetime(year,1,1)+days(d) %}
 {%- set t1 = t+days((nhours/24/2)|int) %}
 {%- set t2 = t+hours(nhours/2) %}
@@ -57,5 +57,5 @@ Lat |   Twilight    |      Sun      |   Twilight    |     Moon      |
 {{-m.get(1)|hm if m.get(1) or m.get(0) else up if m["max"]>0 else dn}}{{" | "}}
 {{-m.get(0)|hm if m.get(0) or m.get(1) else up if m["max"]>0 else dn}}{{" | "}}
 {% endfor %}
-{% endif -%}{{progress()-}}
+{% endif -%}{{progress(nhours//24)-}}
 {% endfor %}

@@ -6,7 +6,10 @@ from datetime import datetime, date
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from math import copysign, floor, cos, nan, sqrt, atan, sin, asin, acos, radians, degrees
+from multiprocessing import set_start_method, Process, Queue
 from os.path import isfile
+from queue import Empty
+from time import sleep
 
 from cachetools import cached
 from numpy import array, arange
@@ -42,18 +45,22 @@ stars = {"Alpheratz": 677, "Ankaa": 2081, "Schedar": 3179, "Diphda": 3419, "Ache
 latitudes = (72, 70, 68, 66, 64, 62, 60, 58, 56, 54, 52, 50, 45, 40, 35, 30, 20, 10, 0,
              -10, -20, -30, -35, -40, -45, -50, -52, -54, -56, -58, -60)
 
-_caches = defaultdict(dict)
+_cache = defaultdict(dict)
+
+
+def merge_cache(c):
+    for k, v in c.items():
+        _cache[k].update(v)
 
 
 def load_cache(filename="cache.pkl"):
     with open(filename, "rb") as f:
-        for k, c in pickle.load(f).items():
-            _caches[k].update(c)
+        merge_cache(pickle.load(f))
 
 
 def dump_cache(filename="cache.pkl"):
     with open(filename, "wb") as f:
-        pickle.dump(_caches, f)
+        pickle.dump(_cache, f)
 
 
 def iers_dates(finals):
@@ -94,7 +101,7 @@ def iers_info(kind, mode):
 ARIES = "Aries"
 
 
-def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
+def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=None):
     "initialize SkyField and Almanac global state"
     global ts, eph, bodies, earth, star_df, _iers_info
 
@@ -142,12 +149,13 @@ def init(iers_time=True, polar_motion=True, ephemeris="de440s", cache=False):
         "Polaris": Star.from_dataframe(star_df.loc[11767]),
     })
 
-    if cache:
+    if cache and "r" in cache:
         try:
             load_cache()
         except:
             pass
 
+    if cache and "w" in cache:
         atexit.register(dump_cache)
 
 
@@ -194,7 +202,7 @@ def delta_t(t):
 _gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 with GHAA of 0
 
 
-@cached(_caches["sha"])
+@cached(_cache["sha"])
 def sha_dec(t, b):
     "SHA and Dec of body b at time t in degrees"
     if _gha == 0:
@@ -214,7 +222,7 @@ def gha_dec(t, b, sunvcorr=False):
     return gha, dec
 
 
-@cached(_caches["gha"])
+@cached(_cache["gha"])
 def _gha_dec(t, b):
     "GHA and Dec of body b at time t in degrees"
     if _gha == 0 or _gha == 2 and b == ARIES:
@@ -262,7 +270,7 @@ def alt_az(t, b, lat, lon, sky=0):
     return hc, zn
 
 
-@cached(_caches["sd"])
+@cached(_cache["sd"])
 def semi_diameter(t, b):
     "semi diameter of body b at time t in arc minutes"
     t = time(t)
@@ -294,7 +302,7 @@ def v_value(t, b):
     return ((gha1 - gha0) % 360 - base) * 60
 
 
-@cached(_caches["mag"])
+@cached(_cache["mag"])
 def magnitude(t, b):
     "magnitude of body b at time t"
     t = time(t)
@@ -316,7 +324,7 @@ def equation_of_time(t):
     return eqot * 60
 
 
-@cached(_caches["mp"])
+@cached(_cache["mp"])
 def meridian_passage(t, b, lon=0, upper=True):
     "time of meridian passage of body b at date t in hours"
     f = almanac.meridian_transits(eph, bodies[b], wgs84.latlon(0, lon))
@@ -329,7 +337,7 @@ def meridian_passage(t, b, lon=0, upper=True):
     return hours(times[0])
 
 
-@cached(_caches["sr"])
+@cached(_cache["sr"])
 def sunrise_sunset(t, lat, lon=0):
     "sunset/sunrise times 1=rise 0=set"
     t0, t1 = time(t), time(t + timedelta(hours=24))
@@ -344,7 +352,7 @@ def sunrise_sunset(t, lat, lon=0):
     return data
 
 
-@cached(_caches["tw"])
+@cached(_cache["tw"])
 def twilight(t, lat, lon=0):
     """twilights and sunset/sunrise
     0 = night, dark
@@ -371,7 +379,7 @@ def twilight(t, lat, lon=0):
     return data
 
 
-@cached(_caches["mr"])
+@cached(_cache["mr"])
 def moon_rise_set(t, lat, lon=0):
     "time of moon rise and set"
     s = "Moon"
@@ -389,7 +397,7 @@ def moon_rise_set(t, lat, lon=0):
     return data
 
 
-@cached(_caches["ma"])
+@cached(_cache["ma"])
 def moon_age_phase(t):
     "moon age (time since new moon) in days and phase (fraction illuminated)"
     t0, t1 = time(t - timedelta(days=30)), time(t + timedelta(hours=24))
@@ -873,7 +881,7 @@ def mp_img(year, filename=None, size=(16, 9)):
     return filename
 
 
-def render(template, variables={}, generate=False, progress=None):
+def render(template, variables={}, progress=None):
     from jinja2 import Environment, FileSystemLoader, select_autoescape
 
     env = Environment(loader=FileSystemLoader("."), autoescape=select_autoescape())
@@ -914,7 +922,6 @@ def render(template, variables={}, generate=False, progress=None):
         "moon_rs": moon_rise_set,
         "eqot_img": lambda *a, **k: eqot_img(*a, **k),
         "mp_img": lambda *a, **k: mp_img(*a, **k),
-        "progress": lambda *a, **k: "",
         "decimals": lambda n: str(decimals(n)) * 0,
         "marker": lambda k, m: str(marker(k, m)) * 0,
         "inc_sun": inc_sun,
@@ -930,11 +937,12 @@ def render(template, variables={}, generate=False, progress=None):
     })
 
     if progress:
-        progress.start()
-        env.globals["progress"] = lambda *a: str(progress.next(*a)) * 0
+        env.globals["progress"] = lambda *a: str(progress(a[0] if a else 1)) * 0
+    else:
+        env.globals["progress"] = lambda *a: ""
 
     template = env.get_template(template)
-    return template.generate() if generate else template.render()
+    return template.generate()
 
 
 def calculate():
@@ -983,6 +991,64 @@ def calculate():
     print("Intercept", dm(ic))
 
 
+DEVNULL = "/dev/null"
+
+
+def process(template, out, variables, progress=None):
+    # for i in range(variables["ndays"]):
+    #    sleep(1)
+    #    progress(1)
+    # return
+    init(variables["iers_time"], variables["polar_motion"], variables["ephemeris"], variables["cache"])
+    if out == "-":
+        for l in render(template, variables, progress):
+            print(l, end="")
+    elif out == DEVNULL:
+        for l in render(template, variables, progress):
+            pass
+    else:
+        with open(out, "w") as f:
+            for l in render(template, variables, progress):
+                f.write(l)
+
+    if variables.get("push_cache"):
+        progress(_cache)
+
+
+def parallel(args, variables):
+    set_start_method('spawn')
+    n = args.parallel
+    m = args.days // n
+    processes = []
+    k = Queue()
+    variables["push_cache"] = True
+    variables["cache"] = "r" if args.cache else None
+    for i in range(n):
+        variables["odays"] = args.start + i * m
+        variables["ndays"] = m if i < n - 1 else args.days - i * m
+        p = Process(target=process, args=(args.template, DEVNULL, variables, k.put_nowait))
+        processes.append(p)
+        p.start()
+    bar = Bar(f"computing tables", max=args.days, suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
+    bar.start()
+    while any([p.is_alive() for p in processes]):
+        try:
+            n = k.get_nowait()
+            if isinstance(n, dict):
+                merge_cache(n)
+            else:
+                bar.next(n)
+        except Empty:
+            pass
+        sleep(0.1)
+
+    variables["push_cache"] = False
+    variables["cache"] = "w" if args.cache else None
+    variables["odays"] = args.start
+    variables["ndays"] = args.days
+    bar.finish()
+
+
 def main():
     from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -994,7 +1060,7 @@ def main():
     parser.add_argument("template", help="jinja template to render", nargs="?")
     parser.add_argument("-o", "--output", metavar="file", help="output file, - for stdout")
     parser.add_argument("-f", "--force", action="store_true", help="force overwrite")
-    parser.add_argument("-c", "--cache", action="store_true", help="load/save cached values")
+    parser.add_argument("-c", "--cache", action='store_const', const="rw", help="load/save cached values")
     parser.add_argument("-y", "--year", type=int, default=datetime.utcnow().year, help="year to generate data for")
     parser.add_argument("-s", "--start", type=int, default=0, help="offset for start day of year")
     parser.add_argument("-d", "--days", type=int, default=365, help="number of days to generate")
@@ -1003,14 +1069,14 @@ def main():
     parser.add_argument("-P", "--no-polar", action="store_true", help="do not correct for polar motion")
     parser.add_argument("-e", "--ephemeris", metavar="file", default="de440s", help="ephemeris file to use")
     parser.add_argument("-C", "--calculate", action="store_true", help="interactive sight reduction calculation")
+    parser.add_argument("-p", "--parallel", type=int, default=1, help="number of parallel processes to use")
     args = parser.parse_args()
 
     iers_time = not args.no_finals
     polar_motion = iers_time and not args.no_polar
 
-    init(iers_time, polar_motion, args.ephemeris, args.cache)
-
     if args.calculate:
+        init(iers_time, polar_motion, args.ephemeris, args.cache)
         calculate()
         return
 
@@ -1024,22 +1090,22 @@ def main():
         "iers_time": iers_time,
         "polar_motion": polar_motion,
         "ephemeris": args.ephemeris,
+        "cache": args.cache,
     }
 
     if args.set:
         variables.update({v.split("=", 1)[0]: parse(v.split("=", 1)[1]) for v in args.set})
 
-    if args.output and args.output == "-":
-        for l in render(args.template, variables=variables, generate=1):
-            print(l, end="")
-    else:
-        out = args.output or args.template.replace(".j2", "")
-        assert not isfile(out) or args.force, out + " exists, use -f to overwrite"
-        bar = Bar(out, max=args.days, suffix="%(percent)d%% %(eta_td)s")
-        with open(out, "w") as f:
-            for l in render(args.template, variables=variables, generate=1, progress=bar):
-                f.write(l)
-        bar.finish()
+    out = args.template.replace(".j2", "")
+    assert not isfile(out) or args.force, f"{out} exists, use -f to overwrite"
+
+    if args.parallel > 1:
+        parallel(args, variables)
+
+    bar = Bar(out, max=args.days, suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
+    bar.start()
+    process(args.template, out, variables, bar.next)
+    bar.finish()
 
 
 if __name__ == "__main__":
