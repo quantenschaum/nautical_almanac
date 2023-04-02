@@ -112,4 +112,4 @@ Vega        2  16.50245810  38.80387411  80.57993151  38.80387411
 
 Multiprocessing is implemented as follows; The range of days is split into n chunks, then the template is rendered for each of the chunks in its own process. The output of these rendering passes is discarded, they are just used to populate the cache. Then the template is rendered again in a final pass over the full range of days. This pass is very fast, since the values get just pulled from the cache.
 
-Unfortunately multiprocessing has not the desired effect of reducing the compute time, because SkyField already uses all cores internally.
+Unfortunately multiprocessing does not reduce the compute time as much as expected, because SkyField already uses all cores internally. Going from 1 to 4 processes reduced the time by about 40% on my machine.
