@@ -1027,22 +1027,22 @@ def parallel(args, variables):
     set_start_method('spawn')
     n = args.parallel
     m = args.days // n
-    m += 3 - m % 3  # make multiple of 3 because pages contain 3 days
+    m += 3 - m % 3 if m % 3 else 0  # make multiple of 3 because pages contain 3 days
     assert not m % 3, m
-    l = max(0, args.days - (n - 1) * m)  # last seqment
+    l = max(0, args.days - (n - 1) * m)  # last segment
     processes = []
     k = Queue()
     variables["push_cache"] = True
     variables["cache"] = "r" if args.cache else None
+    bar = Bar(f"computing tables", max=args.days, suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
+    bar.start()
     for i in range(n):
         variables["odays"] = args.start + i * m
         variables["ndays"] = m if i < n - 1 else l
         p = Process(target=process, args=(args.template, DEVNULL, variables, k.put_nowait))
         processes.append(p)
         p.start()
-    bar = Bar(f"computing tables", max=args.days, suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
-    bar.start()
-    while any([p.is_alive() for p in processes]):
+    while any(map(Process.is_alive, processes)):
         try:
             n = k.get_nowait()
             if isinstance(n, dict):
@@ -1052,12 +1052,11 @@ def parallel(args, variables):
         except Empty:
             pass
         sleep(0.1)
-
+    bar.finish()
     variables["push_cache"] = False
     variables["cache"] = "w" if args.cache else None
     variables["odays"] = args.start
     variables["ndays"] = args.days
-    bar.finish()
 
 
 def main():
