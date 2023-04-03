@@ -1,6 +1,10 @@
 % -*- TeX:DE:UTF-8 -*-
-{%- set pdays = 3 %}{#- days per page -#}
-{%- set xlatitudes = [] %}
+{%- set pdays = pdays if pdays is defined else 3 %}{#- days per page -#}
+{%- set tabs_only = tabs_only if tabs_only is defined else push_cache %}
+{%- set preface = preface if preface is defined else not tabs_only %}
+{%- set inc_corr = inc_corr if inc_corr is defined else not tabs_only %}
+{%- set planets_page = planets_page if planets_page is defined else 1 %}
+{%- set events = events if events is defined else 1 %}
 {%- set dh = 1 %}{#- step in hours for daily pages -#}
 {%- set units = 0 %}{#- units after table header on daily pages -#}
 {%- set tab=1 -%}{#- use tabulated values for altitude correction -#}
@@ -85,6 +89,7 @@
 \clearpage
 \nopagecolor
 
+{%- if preface %}
 ~\clearpage
 
 %
@@ -93,7 +98,6 @@
 \pagestyle{page}
 \tableofcontents
 \clearpage
-
 
 %
 % Sky Charts %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,7 +319,7 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 \end{tabular}
 \clearpage
 \nopagecolor
-
+{%- endif %}
 
 %\pagestyle{blank}
 %\mainmatter
@@ -366,6 +370,7 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 , {{(t+days(2))|f("{:%d}" if (t+days(2)).month==(t+days(1)).month else "{:%B %d}")-}}
 ~({{- t|f("{:%a}") -}}, {{(t+days(1))|f("{:%a}")-}}, {{(t+days(2))|f("{:%a}")-}})}}}
 \fancyhead[LO]{\footnotesize\textsf{$\Delta$UT1=UT1-UTC={{dut1(t)|f("+0.0000")}}s~~~~$\Delta$T=TT-UT1={{dtt(t)|f("+0.0000")}}s}}
+{%- if planets_page %}
 %
 % Aries and Planets {{D}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -409,6 +414,7 @@ d & \V h & \multicolumn{1}{c|}{\GHA}
 {%- endfor %}
 \hline
 \multicolumn{1}{c}{}\\[-0.5ex]
+{%- if events %}
 %
 % SHA of Planets {{D}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -424,8 +430,10 @@ d & \V h & \multicolumn{1}{c|}{\GHA}
 \hline
 \multicolumn{1}{c}{}\\[-0.5ex]
 {%- endfor %}
+{%- endif %}
 \end{tabular}
-{% if pdays>1 %}\clearpage{% endif %}
+\clearpage
+{%- endif %}
 %
 % Sun and Moon {{D}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -455,6 +463,7 @@ d & \V h &
 \multicolumn{1}{c}{}\\[-0.5ex]
 {%- endfor %}
 \end{tabular}
+{%- if events %}
 \enskip
 %
 % Twilight and Sunrise/set {{D}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -518,13 +527,17 @@ Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor
 {%- endfor %}
 \hline
 \end{tabular}
-\clearpage{{progress(pdays)}}
+{%- endif %}
+\clearpage
+{{-progress(pdays)}}
 {% endfor %}
 
 
 %\pagestyle{blank}
 %\backmatter
 
+
+{%- if inc_corr %}
 %
 % Increments and Corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -565,6 +578,7 @@ v/d~~~corr & v/d~~~corr & v/d~~~corr \\
 {%- endif %}
 {%- endfor %}
 \nopagecolor
+{%- endif %}
 
 
 \end{document}
