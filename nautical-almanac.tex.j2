@@ -155,8 +155,8 @@ $\prime$ & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s & m\phantom{:0}s
 & $^{\prime}$\phantom{=0}$^{\prime\prime}$ & s \\
 {%- for d in range(61) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "-}}
-{% for o in range(0,360,60) %}\textbf{ {{-(d+o)|f("000")}}} & {{((d+o)/15)|hm}} & {% endfor -%}
-\textbf{ {{-d|f("000")}}} & {%- for i in range(4) %}{{((d+i/4)/60/15)|ms}} {{"" if loop.last else "&"}} {% endfor -%}
+{% for o in range(0,360,60) %}\textbf{ {{-(d+o)|f("  0")}}} & {{((d+o)/15)|hm}} & {% endfor -%}
+\textbf{ {{-d|f("  0")}}} & {%- for i in range(4) %}{{((d+i/4)/60/15)|ms}} {{"" if loop.last else "&"}} {% endfor -%}
 & \textbf{ {{-(d/60)|f("0.0")+"=" if loop.index0%6==0 else ""}}{{-d|f("00")}}} & {{(d/15)|f("0.00")}} \\
 {%- endfor %}
 \hline
@@ -523,7 +523,7 @@ Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor
 {%- set eq=eqot(td+hours(12)) %}\colorbox{ {{-"Gray" if eq<0 else "white"}}}{ {{-eq|abs|ms}}} &
 {{-MP(td,"Sun")|hm}} &
 {{-MP(td,"Moon")|hm}} & {{MP(td,"Moon",upper=0)|hm}} &
-{{-age(td)|f(0)}}\,{{(phase(td)*100)|f("000")|rep}} \\
+{{-age(td)|f(0)}}\,{{(phase(td)*100)|f("  0")|rep}} \\
 {%- endfor %}
 \hline
 \end{tabular}
