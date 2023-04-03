@@ -293,7 +293,7 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 \fancyhead{}
 \fancyhead[C]{\textsf{Index to Selected Stars}}
 %
-{%- set t=datetime(year,1,1) %}
+{%- set t=time(year,1,1) %}
 \begin{tabular}[t]{|l|r|r|r|r|}
 \hline
 \V Name & No & Mag & SHA & Dec \\
@@ -355,7 +355,7 @@ HoE = Height of Eye, Alt = Apparent Altitude = Sextant altitude corrected for in
 \fancyfoot[C]{\footnotesize\textsf{\texttt{ {{-ephemeris}}}} ephemeris}
 {%- endif %}
 {%- for D in range(odays,odays+ndays,pdays) %}
-{%- set t = datetime(year,1,1)+days(D) %}
+{%- set t = time(year,1,1)+days(D) %}
 %
 % {{t}} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %

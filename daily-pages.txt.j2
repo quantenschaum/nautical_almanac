@@ -11,7 +11,7 @@ IERS polar motion data until {{iers("P","I")}}, predictions until {{iers("P","P"
 {%- endif %}
 
 {% for d in range(odays,odays+ndays,nhours//24) %}
-{%- set t = datetime(year,1,1)+days(d) %}
+{%- set t = time(year,1,1)+days(d) %}
 {%- set t1 = t+days((nhours/24/2)|int) %}
 {%- set t2 = t+hours(nhours/2) %}
 {{-t|f("{:%Y %B %d (%a)}")}}  dUT1=UT1-UTC={{dut1(t2)|f("+0.0000s")}}  dTT=TT-UT1={{dtt(t2)|f("+0.0000s")}}

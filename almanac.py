@@ -165,12 +165,14 @@ def body(name):
 
 
 # @cached({})
-def time(t):
+def time(t, *a, **k):
     "python datetime (UT1) -> skyfield time"
     if isinstance(t, Time):
         return t
-    # return ts.from_datetime(t.replace(tzinfo=utc))
-    return ts.ut1(t.year, t.month, t.day, t.hour, t.minute, t.second + t.microsecond / 1e6)
+    if isinstance(t, datetime):
+        # return ts.from_datetime(t.replace(tzinfo=utc))
+        return ts.ut1(t.year, t.month, t.day, t.hour, t.minute, t.second + t.microsecond / 1e6)
+    return datetime(t, *a, **k)
 
 
 def dtime(t):
@@ -911,10 +913,10 @@ def render(template, variables={}, progress=None):
     })
     env.globals.update(variables)
     env.globals.update({
+        "now": datetime.utcnow(),
         "today": datetime.utcnow().date(),
         "time": time,
-        "datetime": datetime,
-        "delta": timedelta,
+        "duration": timedelta,
         "days": lambda n: timedelta(days=n),
         "hours": lambda n: timedelta(hours=n),
         "dut1": delta_ut1,
