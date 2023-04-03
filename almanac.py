@@ -164,6 +164,7 @@ def body(name):
     return bodies[name]
 
 
+# @cached({})
 def time(t):
     "python datetime (UT1) -> skyfield time"
     if isinstance(t, Time):
@@ -203,8 +204,13 @@ _gha = 0  # 0=radec+gast, 1=latlon(itrs), 2=like 1 with GHAA of 0
 
 
 # @cached({})
+def earth_at(t):
+    return earth.at(t)
+
+
+# @cached({})
 def observe(t, b, a=True):
-    o = earth.at(t).observe(bodies[b])
+    o = earth_at(t).observe(bodies[b])
     return o.apparent() if a else o
 
 
@@ -321,6 +327,7 @@ def magnitude(t, b):
         return float(m)
 
 
+@cached(_cache["eqot"])
 def equation_of_time(t):
     "equation of time (solar time - UT1) at time t in minutes"
     gha, dec = gha_dec(t, "Sun")
@@ -1026,19 +1033,21 @@ def process(template, out, variables, progress=None):
 def parallel(args, variables):
     set_start_method('spawn')
     n = args.parallel
-    m = args.days // n
-    m += 3 - m % 3 if m % 3 else 0  # make multiple of 3 because pages contain 3 days
-    assert not m % 3, m
-    l = max(0, args.days - (n - 1) * m)  # last segment
+    w = args.days // n
+    m = args.multiple
+    w += m - w % m if w % m else 0  # make multiple of 3 because pages contain 3 days
+    assert not w % m, w
+    l = max(0, args.days - (n - 1) * w)  # last segment
     processes = []
     k = Queue()
     variables["push_cache"] = True
     variables["cache"] = "r" if args.cache else None
-    bar = Bar(f"computing tables", max=args.days, suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
+    bar = Bar(f"computing with {n} processes", max=args.days,
+              suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
     bar.start()
     for i in range(n):
-        variables["odays"] = args.start + i * m
-        variables["ndays"] = m if i < n - 1 else l
+        variables["odays"] = args.start + i * w
+        variables["ndays"] = w if i < n - 1 else l
         p = Process(target=process, args=(args.template, DEVNULL, variables, k.put_nowait))
         processes.append(p)
         p.start()
@@ -1080,6 +1089,7 @@ def main():
     parser.add_argument("-e", "--ephemeris", metavar="file", default="de440s", help="ephemeris file to use")
     parser.add_argument("-C", "--calculate", action="store_true", help="interactive sight reduction calculation")
     parser.add_argument("-p", "--parallel", type=int, default=1, help="number of parallel processes to use")
+    parser.add_argument("-m", "--multiple", type=int, default=3, help="number of parallel processes to use")
     args = parser.parse_args()
 
     iers_time = not args.no_finals
@@ -1106,7 +1116,7 @@ def main():
     if args.set:
         variables.update({v.split("=", 1)[0]: parse(v.split("=", 1)[1]) for v in args.set})
 
-    out = args.template.replace(".j2", "")
+    out = args.output or args.template.replace(".j2", "")
     assert not isfile(out) or args.force, f"{out} exists, use -f to overwrite"
 
     if args.parallel > 1:
