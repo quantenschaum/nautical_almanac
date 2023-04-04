@@ -29,6 +29,8 @@ try:
 except:
     raise
 
+__version__ = "0.1"
+
 planets = "Venus", "Mars", "Jupiter", "Saturn"
 
 stars = {"Alpheratz": 677, "Ankaa": 2081, "Schedar": 3179, "Diphda": 3419, "Achernar": 7588, "Hamal": 9884,
@@ -1075,7 +1077,7 @@ def main():
 
     parser = ArgumentParser(
         prog="almanac",
-        description="astro navigation tables generator",
+        description="astro navigation tables generator " + __version__,
         formatter_class=ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("template", help="jinja template to render", nargs="?")
@@ -1092,6 +1094,7 @@ def main():
     parser.add_argument("-C", "--calculate", action="store_true", help="interactive sight reduction calculation")
     parser.add_argument("-p", "--parallel", type=int, default=1, help="number of parallel processes to use")
     parser.add_argument("-m", "--multiple", type=int, default=3, help="number of parallel processes to use")
+    parser.add_argument("-V", "--version", action="version", version=__version__)
     args = parser.parse_args()
 
     iers_time = not args.no_finals
