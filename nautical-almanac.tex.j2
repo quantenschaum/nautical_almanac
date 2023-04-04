@@ -497,13 +497,20 @@ Lat {% for d in range(pdays) %}& \textbf{ {{-(t+days(d))|f("{:%d}")}}} {% endfor
 \hline
 {% if units %}\V $\circ$ & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m & h\phantom{:0}m \\{% endif %}
 {%- for l in latitudes %}
-{% set tw=twilight(t,l) -%}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index0%6==0 else "  "}} {{l}}
-{%- for d in range(pdays) %}{%- set td = t+days(d) %} {% set m=moon_rs(td,l) -%}
-& {{m.get(1)|hm if m.get(1) or m.get(0) else up if m["max"]>0 else dn}}
+{%- for d in range(pdays) %}{%- set td = t+days(d) %} {% set m=moon_rs(td,l) %} &
+{%- if 11 in m -%}
+\makecell{\tiny {{-m[1]|hm}}\\[-1ex]\tiny {{m[11]|hm}}}
+{%- else -%}
+{{m.get(1)|hm if m.get(1) or m.get(0) else up if m["max"]>0 else dn}}
+{%- endif %}
 {%- endfor %}
-{%- for d in range(pdays) %}{%- set td = t+days(d) %} {% set m=moon_rs(td,l) -%}
-& {{m.get(0)|hm if m.get(0) or m.get(1) else up if m["max"]>0 else dn}}
+{%- for d in range(pdays) %}{%- set td = t+days(d) %} {% set m=moon_rs(td,l) %} &
+{%- if 10 in m -%}
+\makecell{\tiny {{-m[0]|hm}}\\[-1ex]\tiny {{m[10]|hm}}}
+{%- else -%}
+{{m.get(0)|hm if m.get(0) or m.get(1) else up if m["max"]>0 else dn}}
+{%- endif %}
 {%- endfor %} \\
 {%- endfor %}
 \hline
