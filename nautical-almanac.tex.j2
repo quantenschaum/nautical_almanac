@@ -572,9 +572,9 @@ v/d~~~corr & v/d~~~corr & v/d~~~corr \\
 {%- for s in range(61) %}
 {{"\\V" if loop.first else "  "}}{{"\\D" if loop.index%5==0 else "  "-}}
 {{s}} & {{inc_sun(m,s)|dm}} & {{inc_aries(m,s)|dm}} & {{inc_moon(m,s)|dm-}} &
-{%- set v=s/600 %}{{v|f}} {{v_corr(m,30,v)|f}} &
-{%- set v=s/300 %}{{v|f}} {{v_corr(m,30,v)|f}} &
-{%- set v=s/200 %}{{v|f}} {{v_corr(m,30,v)|f}} \\
+{%- set v=s/10 %}{{v|f}} {{v_corr(m,30,v)|f}} &
+{%- set v=s/10+6 %}{{v|f}} {{v_corr(m,30,v)|f}} &
+{%- set v=s/10+12 %}{{v|f}} {{v_corr(m,30,v)|f}} \\
 {%- endfor %}
 \hline
 \end{tabular}
