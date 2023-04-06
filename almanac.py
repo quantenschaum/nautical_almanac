@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import date
 from math import cos, sqrt, atan, sin, asin, acos, radians, degrees
 from multiprocessing import set_start_method, Process, Queue
+from os import environ
 from queue import Empty
 from time import sleep
 
@@ -566,6 +567,9 @@ def parallel(args, variables):
     bar = Bar(f"computing with {n} processes", max=args.days,
               suffix="%(percent)d%% %(eta_td)s %(index)s %(elapsed_td)s")
     bar.start()
+    for v in "OMP_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS":
+        if v not in environ:
+            environ[v] = "1"
     for i in range(n):
         variables["odays"] = args.start + i * w
         variables["ndays"] = w if i < n - 1 else l
