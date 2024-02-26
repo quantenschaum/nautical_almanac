@@ -29,7 +29,7 @@ from matplotlib.pyplot import figure, plot, title, xlabel, ylabel, gca, xlim, yl
 from numpy import array, nan
 from progress.bar import Bar
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 planets = "Venus", "Mars", "Jupiter", "Saturn"
 
@@ -329,7 +329,7 @@ def magnitude(t, b):
 
 @cached(_cache["eqot"])
 def equation_of_time(t):
-    "equation of time (solar time - UT1) at time t in minutes"
+    "equation of time (solar time - UT1) at time t in seconds"
     gha, dec = gha_dec(t, "Sun")
     tsun = (gha / 15 - 12) % 24  # solar time
     tut1 = hours(time(t))
@@ -503,7 +503,7 @@ def eqot_img(year, filename=None, size=(16, 9)):
         if t.day in [1, 10, 20]:
             xticks.append(d)
             xlabels.append(f"{t:%b}" if t.day == 1 else t.day)
-        eqot.append(equation_of_time(t) * 60)
+        eqot.append(equation_of_time(t))
 
     figure(figsize=size)
     plot(eqot)
