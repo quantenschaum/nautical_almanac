@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re
 from datetime import datetime, timedelta
 from os import listdir
