@@ -1,5 +1,6 @@
 Y=$(shell date +%Y)
 
+all: txt pdf
 pdf: Nautical-Almanac-$(Y).pdf
 txt: daily-pages-$(Y).txt
 
